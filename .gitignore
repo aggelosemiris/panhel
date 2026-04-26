@@ -1,0 +1,78 @@
+# Dependencies
+node_modules/
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+Thumbs.db
+*.code-workspace
+
+# Testing
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Database
+*.sqlite
+*.sqlite3
+db/*.sql
+
+# Temporary files
+tmp/
+temp/
+temp_*/
+*.tmp
+
+# Runtime app data
+backend/data/auth-store.json
+backend/data/student-exams.json
+backend/data/student-stats.json
+backend/data/generated-exams/
+backend/data/generated-explanations/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Editor backups
+*~
+*.bak
+*.swp
+
+# Production
+.next/
+out/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+
+# Misc
+.cache/
+.eslintcache

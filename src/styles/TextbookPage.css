@@ -1,0 +1,112 @@
+.textbook-page {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 30px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.textbook-page h1 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 28px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #34495e;
+  font-size: 16px;
+  margin-bottom: 30px;
+  font-weight: 500;
+}
+
+.theory-section {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theory-section h2 {
+  color: #2980b9;
+  margin-bottom: 20px;
+  font-size: 22px;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 10px;
+}
+
+.pdf-button {
+  display: block;
+  width: 100%;
+  padding: 15px 20px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 12px;
+}
+
+.pdf-button.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.pdf-button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.pdf-button.secondary {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}
+
+.pdf-button.secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 87, 108, 0.6);
+  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+}
+
+.pdf-button:active {
+  transform: translateY(0);
+}
+
+.theory-content {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+}
+
+.theory-content p {
+  color: #555;
+  line-height: 1.6;
+  margin: 10px 0;
+  font-size: 15px;
+}
+
+@media (max-width: 600px) {
+  .textbook-page {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  .textbook-page h1 {
+    font-size: 24px;
+  }
+
+  .theory-section h2 {
+    font-size: 18px;
+  }
+
+  .pdf-button {
+    font-size: 14px;
+    padding: 12px 15px;
+  }
+}

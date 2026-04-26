@@ -1,0 +1,50 @@
+{
+  "name": "panhel-exam-coach",
+  "version": "1.0.0",
+  "description": "Interactive Panhellenic Exam Coach - Economics Track (AOTH, AEPP, Math, Ekthesi)",
+  "main": "backend/server.js",
+  "scripts": {
+    "dev": "npm run dev:backend & npm run dev:frontend",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build": "npm run build:backend & npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "start": "node backend/server.js",
+    "db:migrate": "cd backend && node scripts/migrate.js",
+    "db:seed": "cd backend && node scripts/seed.js",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test"
+  },
+  "keywords": [
+    "panhellenic",
+    "exam",
+    "education",
+    "greek",
+    "economics",
+    "interactive-learning"
+  ],
+  "author": "",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0"
+  }
+}
