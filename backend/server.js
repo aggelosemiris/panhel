@@ -29,6 +29,11 @@ app.use(cors({
   credentials: true
 }));
 
+// Health check should stay outside global rate limiting so hosted probes never get 429.
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'Server is running', timestamp: new Date() });
+});
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -44,11 +49,6 @@ app.use(express.urlencoded({ limit: '80mb', extended: true }));
 app.use(morgan('combined'));
 
 // === API Routes ===
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running', timestamp: new Date() });
-});
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
