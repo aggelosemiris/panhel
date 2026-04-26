@@ -4,14 +4,12 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: npm install && npm run build --workspace frontend
+    buildCommand: npm install --include=dev && npm run build --workspace frontend
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: FRONTEND_URL
-        sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_SPECIALIZED_TEACHER_MODEL
@@ -22,7 +20,5 @@ services:
         sync: false
       - key: OPENAI_EXAM_GRADING_MODEL
         value: gpt-4.1-mini
-      - key: ANTHROPIC_API_KEY
-        sync: false
       - key: SPECIALIZED_TEACHER_PROVIDER_ORDER
         value: gemini,openai,anthropic
