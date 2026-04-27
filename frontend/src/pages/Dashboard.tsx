@@ -10,7 +10,7 @@ const planCards = [
     badge: 'ELITE',
     icon: LuBot,
     title: 'Cortex AI Engine',
-    text: 'Advanced Pro Intelligence για ύλη, reasoning, γενικές ερωτήσεις και πολύ πιο δυνατή συνομιλία.',
+    text: 'Ο πιο δυνατός τρόπος να λύνεις απορίες, να παίρνεις reasoning και να δουλεύεις ύλη σαν να έχεις καθηγητή δίπλα σου.',
     href: '/specialized-teacher',
     action: 'Είσοδος',
     locked: true,
@@ -20,7 +20,7 @@ const planCards = [
     badge: 'QUIZ',
     icon: LuGraduationCap,
     title: 'Quiz Θεωρίας',
-    text: 'Έλεγχος κατανόησης ανά μάθημα και κεφάλαιο.',
+    text: 'Έλεγχος κατανόησης ανά μάθημα και κεφάλαιο με score και καθαρό feedback.',
     href: '/theory-quiz',
     action: 'Είσοδος',
   },
@@ -28,7 +28,7 @@ const planCards = [
     badge: 'MUST',
     icon: LuSparkles,
     title: 'SOS Θέματα',
-    text: 'Τα πιο κρίσιμα μοτίβα των τελευταίων ετών.',
+    text: 'Τα πιο κρίσιμα μοτίβα των τελευταίων ετών μαζεμένα για γρήγορη επανάληψη.',
     href: '/panic-mode',
     action: 'Είσοδος',
   },
@@ -36,7 +36,7 @@ const planCards = [
     badge: 'CORE',
     icon: LuBookOpen,
     title: 'Διαδραστικό Βιβλίο',
-    text: 'Θεωρία, κεφάλαια και οργανωμένη μελέτη.',
+    text: 'Θεωρία, κεφάλαια και οργανωμένη μελέτη μέσα σε μία ενιαία εμπειρία.',
     href: '/textbook',
     action: 'Είσοδος',
   },
@@ -44,7 +44,7 @@ const planCards = [
     badge: 'TESTS',
     icon: LuFileText,
     title: 'Διαγωνίσματα',
-    text: 'Εξάσκηση ανά κεφάλαιο και δυσκολία.',
+    text: 'Εξάσκηση ανά κεφάλαιο, difficulty tiers και έτοιμη πορεία μελέτης.',
     href: '/tests/chapter',
     action: 'Είσοδος',
   },
@@ -52,7 +52,7 @@ const planCards = [
     badge: 'PDF',
     icon: LuHistory,
     title: 'Παλαιές Εξετάσεις',
-    text: 'Πανελλήνιες και ΟΕΦΕ με PDF viewer.',
+    text: 'Πανελλήνιες και ΟΕΦΕ σε καθαρό PDF viewer για σοβαρή επανάληψη.',
     href: '/exams',
     action: 'Είσοδος',
   },
@@ -137,7 +137,7 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-v2">
-      <section className="dashboard-hero-v2">
+      <section className="dashboard-hero-v2" data-reveal>
         <div className="dashboard-hero-copy-wrap-v2">
           <div className="dashboard-hero-icon-v2">
             <LuTrophy size={26} />
@@ -147,15 +147,20 @@ export default function Dashboard() {
             <h1>Το Πλάνο σου</h1>
             <p className="dashboard-hero-text-v2">
               {isAuthenticated
-                ? `Γεια σου ${currentUser?.username}. Συνέχισε από εκεί που σταμάτησες.`
-                : 'Εργαλεία για την καθημερινή σου μελέτη.'}
+                ? `Γεια σου ${currentUser?.username}. Συνέχισε από εκεί που σταμάτησες και κράτα ρυθμό με ξεκάθαρη εικόνα προόδου.`
+                : 'Εργαλεία για την καθημερινή σου μελέτη, με καθαρή δομή και πραγματική αίσθηση ελέγχου.'}
             </p>
           </div>
         </div>
 
         <div className="dashboard-hero-stats-v2">
           {statCards.map((card) => (
-            <article key={card.label} className="dashboard-hero-stat-v2">
+            <article
+              key={card.label}
+              className="dashboard-hero-stat-v2"
+              data-reveal
+              style={{ ['--reveal-delay' as string]: `${70 + statCards.indexOf(card) * 70}ms` }}
+            >
               <strong>{card.value}</strong>
               <span>{card.label}</span>
             </article>
@@ -168,7 +173,12 @@ export default function Dashboard() {
           const progress = getProgress(profile, subject.id, subject.fallback);
 
           return (
-            <article key={subject.id} className="dashboard-progress-card-v2">
+            <article
+              key={subject.id}
+              className="dashboard-progress-card-v2"
+              data-reveal
+              style={{ ['--reveal-delay' as string]: `${100 + subjectMeta.indexOf(subject) * 80}ms` }}
+            >
               <div className="dashboard-progress-head-v2">
                 <span>{subject.label}</span>
                 <strong>
@@ -184,7 +194,7 @@ export default function Dashboard() {
       </section>
 
       <section className="dashboard-section-v2">
-        <div className="dashboard-section-heading-v2">
+        <div className="dashboard-section-heading-v2" data-reveal>
           <p>Κύριες Ενότητες</p>
         </div>
 
@@ -194,7 +204,11 @@ export default function Dashboard() {
             const Icon = card.icon;
 
             const content = (
-              <article className={`dashboard-card-v2 ${disabled ? 'locked' : ''} ${card.featured ? 'featured' : ''}`}>
+              <article
+                className={`dashboard-card-v2 ${disabled ? 'locked' : ''} ${card.featured ? 'featured' : ''}`}
+                data-reveal
+                style={{ ['--reveal-delay' as string]: `${120 + planCards.indexOf(card) * 75}ms` }}
+              >
                 <span className="dashboard-badge-v2">{card.badge}</span>
                 <div className="dashboard-card-icon-v2">
                   <Icon size={24} />
@@ -211,7 +225,7 @@ export default function Dashboard() {
       </section>
 
       <section className="dashboard-section-v2">
-        <div className="dashboard-section-heading-v2">
+        <div className="dashboard-section-heading-v2" data-reveal>
           <p>Βοηθητικά Εργαλεία</p>
         </div>
 
@@ -221,7 +235,11 @@ export default function Dashboard() {
             const disabled = tool.locked && !isAuthenticated;
 
             const content = (
-              <article className={`dashboard-tool-card-v2 ${disabled ? 'locked' : ''}`}>
+              <article
+                className={`dashboard-tool-card-v2 ${disabled ? 'locked' : ''}`}
+                data-reveal
+                style={{ ['--reveal-delay' as string]: `${100 + toolCards.indexOf(tool) * 65}ms` }}
+              >
                 <div className="dashboard-tool-icon-v2">
                   <Icon size={22} />
                 </div>
@@ -238,7 +256,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="dashboard-tip-v2">
+      <section className="dashboard-tip-v2" data-reveal style={{ ['--reveal-delay' as string]: '120ms' }}>
         <p>
           <strong>Συμβουλή:</strong> {dailyTip}
         </p>

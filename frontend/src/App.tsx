@@ -51,6 +51,73 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
   return isAuthenticated ? children : <Navigate to="/app" replace />;
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pathname]);
+
+  return null;
+}
+
+function ScrollRevealManager() {
+  const { pathname } = useLocation();
+
+  React.useEffect(() => {
+    const revealNodes = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+
+    if (!revealNodes.length) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    revealNodes.forEach((node, index) => {
+      node.classList.add('is-reveal-ready');
+      node.classList.remove('is-reveal-visible');
+
+      const rect = node.getBoundingClientRect();
+      if (index === 0 || rect.top < window.innerHeight * 1.02) {
+        node.classList.add('is-reveal-visible');
+      }
+    });
+
+    if (prefersReducedMotion) {
+      revealNodes.forEach((node) => node.classList.add('is-reveal-visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-reveal-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.08,
+        rootMargin: '0px 0px -12% 0px',
+      },
+    );
+
+    const frame = window.requestAnimationFrame(() => {
+      revealNodes.forEach((node) => {
+        if (!node.classList.contains('is-reveal-visible')) {
+          observer.observe(node);
+        }
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [pathname]);
+
+  return null;
+}
+
 function AppLayout() {
   const location = useLocation();
   const hideNavigation =
@@ -62,6 +129,8 @@ function AppLayout() {
 
   return (
     <div className="app">
+      <ScrollToTop />
+      <ScrollRevealManager />
       {hideNavigation ? null : <Navigation />}
       <main className={`main-content ${hideNavigation ? 'main-content-marketing' : ''}`}>
         <Routes>

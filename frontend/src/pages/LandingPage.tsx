@@ -18,7 +18,7 @@ const experienceCards: FeatureCard[] = [
     title: 'AI Καθηγητής+',
     text: 'Ρώτα απορίες σε Μαθηματικά, ΑΟΘ ή ΑΕΠΠ και πάρε απάντηση σαν να μιλάς με καθηγητή δίπλα σου.',
     modalText:
-      'Κολλάς σε άσκηση, θεωρία ή απορία της στιγμής; Ρώτα άμεσα και πάρε ξεκάθαρη εξήγηση βήμα βήμα, προσαρμοσμένη στο επίπεδό σου. Σαν να έχεις έναν καθηγητή δίπλα σου κάθε στιγμή, έτοιμο να σε βοηθήσει ακριβώς όταν τον χρειάζεσαι.',
+      'Κολλάς σε άσκηση, θεωρία ή απορία της στιγμής; Ρώτα άμεσα και πάρε ξεκάθαρη εξήγηση βήμα βήμα, προσαρμοσμένη στο επίπεδό σου. Σαν να έχεις έναν καθηγητή δίπλα σου κάθε στιγμή, έτοιμο να σε βοηθήσει όταν τον χρειάζεσαι.',
     href: '/specialized-teacher',
     tone: 'blue',
     art: 'teacher',
@@ -26,9 +26,9 @@ const experienceCards: FeatureCard[] = [
   {
     icon: LuGraduationCap,
     title: 'Quiz Θεωρίας',
-    text: 'Επανάληψη με ερωτήσεις ανά κεφάλαιο, score και σωστή ροή μέχρι να ολοκληρωθεί όλο το quiz.',
+    text: 'Επανάληψη ανά κεφάλαιο με σωστή ροή ερωτήσεων, score και καθαρό feedback μέχρι να κλείσουν τα κενά σου.',
     modalText:
-      'Κάνε οργανωμένη επανάληψη ανά κεφάλαιο με σωστή ροή ερωτήσεων και άμεσο feedback σε κάθε βήμα. Δες το score σου, εντόπισε τα κενά σου και βελτιώσου σταδιακά μέχρι να ολοκληρώσεις όλο το quiz με σιγουριά.',
+      'Κάνε οργανωμένη επανάληψη ανά κεφάλαιο με σωστή ροή ερωτήσεων και άμεσο feedback. Δες το score σου, εντόπισε τα κενά σου και βελτιώσου σταδιακά μέχρι να ολοκληρώσεις όλο το quiz με σιγουριά.',
     href: '/theory-quiz',
     tone: 'green',
     art: 'quiz',
@@ -36,7 +36,7 @@ const experienceCards: FeatureCard[] = [
   {
     icon: LuSparkles,
     title: 'SOS Θέματα',
-    text: 'Τα πιο χρήσιμα μοτίβα των Πανελληνίων, οργανωμένα για γρήγορη επανάληψη πριν τις εξετάσεις.',
+    text: 'Τα πιο χρήσιμα μοτίβα των Πανελληνίων συγκεντρωμένα για στοχευμένη επανάληψη χωρίς χάσιμο χρόνου.',
     modalText:
       'Τα πιο σημαντικά και συχνά μοτίβα των Πανελληνίων συγκεντρωμένα σε ένα σημείο, ώστε να κάνεις στοχευμένη επανάληψη χωρίς χάσιμο χρόνου. Ιδανικό για τις τελευταίες ημέρες πριν τις εξετάσεις, όταν κάθε λεπτό μετράει.',
     href: '/panic-mode',
@@ -46,7 +46,7 @@ const experienceCards: FeatureCard[] = [
   {
     icon: LuFileText,
     title: 'Custom Generator',
-    text: 'Διάλεξε μάθημα, κεφάλαια και δυσκολία και ετοίμασε διαγώνισμα σε μορφή PDF.',
+    text: 'Διάλεξε μάθημα, κεφάλαια και δυσκολία και ετοίμασε δικό σου διαγώνισμα σε μορφή PDF.',
     modalText:
       'Δημιούργησε το δικό σου διαγώνισμα σε λίγα δευτερόλεπτα. Επίλεξε μάθημα, κεφάλαια και επίπεδο δυσκολίας και πάρε έτοιμο PDF για σοβαρή εξάσκηση, ακριβώς πάνω στα σημεία που θέλεις να δουλέψεις περισσότερο.',
     href: '/generator',
@@ -58,26 +58,26 @@ const experienceCards: FeatureCard[] = [
 const subjectCards = [
   {
     title: 'ΑΟΘ',
-    subtitle: 'Ζήτηση, προσφορά, κόστος, ΑΕΠ, πληθωρισμός και δημόσια οικονομικά.',
+    subtitle: 'Ζήτηση, προσφορά, κόστος, ΑΕΠ, πληθωρισμός και δημόσια οικονομικά σε καθαρή, εξεταστική ροή.',
     tags: ['Θεωρία', 'Ασκήσεις', 'Πανελλήνιες'],
   },
   {
     title: 'ΑΕΠΠ',
-    subtitle: 'Αλγόριθμοι, ΓΛΩΣΣΑ, πίνακες, υποπρογράμματα και εκσφαλμάτωση.',
+    subtitle: 'Αλγόριθμοι, ΓΛΩΣΣΑ, πίνακες, υποπρογράμματα και εκσφαλμάτωση με λογική Πανελληνίων.',
     tags: ['ΓΛΩΣΣΑ', 'Πίνακες', 'Θέματα Γ-Δ'],
   },
   {
     title: 'Μαθηματικά',
-    subtitle: 'Συναρτήσεις, όρια, παράγωγοι, ολοκληρώματα και μελέτη συνάρτησης.',
+    subtitle: 'Συναρτήσεις, όρια, παράγωγοι, ολοκληρώματα και μελέτη συνάρτησης με σωστή μεθοδολογία.',
     tags: ['Όρια', 'Παράγωγοι', 'Ολοκληρώματα'],
   },
 ];
 
 const focusBullets = [
-  'AI καθηγητής που μιλά φροντιστηριακά, όχι σαν generic chatbot.',
-  'Διαγωνίσματα ανά κεφάλαιο, παλιά θέματα, ΟΕΦΕ και μεμονωμένα θέματα.',
-  'Quiz θεωρίας με σωστό session flow και score στο τέλος.',
-  'Custom διαγωνίσματα σε PDF με βάση μάθημα, κεφάλαια και δυσκολία.',
+  'AI καθηγητής που μιλά φροντιστηριακά και εξηγεί σαν πραγματικός άνθρωπος, όχι σαν generic chatbot.',
+  'Διαγωνίσματα ανά κεφάλαιο, παλιά θέματα, ΟΕΦΕ και μεμονωμένα θέματα σε οργανωμένη δομή.',
+  'Quiz θεωρίας με σωστό session flow, feedback σε κάθε βήμα και score στο τέλος.',
+  'Custom διαγωνίσματα σε PDF με βάση μάθημα, κεφάλαια και δυσκολία για στοχευμένη εξάσκηση.',
 ];
 
 const heroMetrics = [
@@ -113,7 +113,7 @@ export default function LandingPage() {
 
           <nav className="landing-nav-v2" aria-label="Κύρια πλοήγηση">
             <a href="#experience">Τι περιλαμβάνει</a>
-            <a href="#teacher">AI καθηγητής</a>
+            <a href="#teacher">AI Καθηγητής</a>
             <a href="#subjects">Μαθήματα</a>
             <a href="#start">Πώς ξεκινάς</a>
           </nav>
@@ -132,7 +132,7 @@ export default function LandingPage() {
       <main>
         <section className="landing-hero-v2" id="experience">
           <div className="landing-hero-shell-v2">
-            <div className="landing-hero-copy-v2">
+            <div className="landing-hero-copy-v2" data-reveal style={{ ['--reveal-delay' as string]: '40ms' }}>
               <p className="landing-kicker-v2">ΨΗΦΙΑΚΟ ΦΡΟΝΤΙΣΤΗΡΙΟ ΠΑΝΕΛΛΗΝΙΩΝ</p>
               <h1>
                 Ολοκληρωμένη
@@ -156,7 +156,12 @@ export default function LandingPage() {
 
               <div className="landing-hero-metrics-v2">
                 {heroMetrics.map((metric) => (
-                  <article key={metric.label} className="landing-hero-metric-v2">
+                  <article
+                    key={metric.label}
+                    className="landing-hero-metric-v2"
+                    data-reveal
+                    style={{ ['--reveal-delay' as string]: `${120 + heroMetrics.indexOf(metric) * 70}ms` }}
+                  >
                     <strong>{metric.value}</strong>
                     <span>{metric.label}</span>
                   </article>
@@ -175,6 +180,8 @@ export default function LandingPage() {
                   className={`landing-feature-card-v2 ${card.tone} ${card.title === 'AI Καθηγητής+' ? 'hero-card' : ''}`}
                   type="button"
                   onClick={() => setActiveCard(card)}
+                  data-reveal
+                  style={{ ['--reveal-delay' as string]: `${170 + experienceCards.indexOf(card) * 90}ms` }}
                 >
                   <div className="landing-feature-icon-v2">
                     <Icon size={24} />
@@ -190,7 +197,7 @@ export default function LandingPage() {
 
         <section className="landing-dark-section-v2" id="teacher">
           <div>
-            <div className="landing-dark-copy-v2">
+            <div className="landing-dark-copy-v2" data-reveal>
               <p className="landing-kicker-v2 light">AI ΚΑΘΗΓΗΤΗΣ+</p>
               <h2>Γιατί δεν είναι απλά ένα chat...</h2>
               <p>
@@ -208,7 +215,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="landing-chat-card-v2">
+            <div className="landing-chat-card-v2" data-reveal style={{ ['--reveal-delay' as string]: '100ms' }}>
               <div className="landing-chat-head-v2">
                 <div>
                   <span>AI Καθηγητής+</span>
@@ -222,8 +229,8 @@ export default function LandingPage() {
               </div>
 
               <div className="landing-chat-message-v2 teacher">
-                Βεβαίως. Σκέψου ότι δεν μας νοιάζει τι γίνεται ακριβώς στο x₀, αλλά τι τιμές πλησιάζει η
-                συνάρτηση όταν το x πλησιάζει το x₀ από αριστερά και δεξιά.
+                Βεβαίως. Σκέψου ότι δεν μας νοιάζει τι γίνεται ακριβώς στο x₀, αλλά τι τιμές πλησιάζει η συνάρτηση
+                όταν το x πλησιάζει το x₀ από αριστερά και δεξιά.
               </div>
 
               <span className="landing-chat-link-v2">Ρώτα τον καθηγητή →</span>
@@ -232,16 +239,21 @@ export default function LandingPage() {
         </section>
 
         <section className="landing-subjects-v2" id="subjects">
-          <p className="landing-kicker-v2">ΤΑ ΜΑΘΗΜΑΤΑ</p>
-          <h2>Τρία μαθήματα, ένα σύστημα.</h2>
-          <p className="landing-section-lead-v2">
-            Κρατάμε όλα όσα έχουμε ήδη χτίσει στην εφαρμογή και τα παρουσιάζουμε πιο καθαρά, ώστε ο μαθητής να
-            μπαίνει κατευθείαν στη σωστή ενότητα.
+          <p className="landing-kicker-v2" data-reveal>ΤΑ ΜΑΘΗΜΑΤΑ</p>
+          <h2 data-reveal style={{ ['--reveal-delay' as string]: '40ms' }}>Τρία μαθήματα, ένα σύστημα.</h2>
+          <p className="landing-section-lead-v2" data-reveal style={{ ['--reveal-delay' as string]: '90ms' }}>
+            Κρατάμε όσα έχουμε ήδη χτίσει στην εφαρμογή και τα παρουσιάζουμε πιο καθαρά, ώστε ο μαθητής να μπαίνει
+            κατευθείαν στη σωστή ενότητα.
           </p>
 
           <div className="landing-subject-grid-v2">
             {subjectCards.map((subject, index) => (
-              <article key={subject.title} className="landing-subject-card-v2">
+              <article
+                key={subject.title}
+                className="landing-subject-card-v2"
+                data-reveal
+                style={{ ['--reveal-delay' as string]: `${120 + index * 90}ms` }}
+              >
                 <span className="landing-subject-index-v2">{index + 1}</span>
                 <h3>{subject.title}</h3>
                 <p>{subject.subtitle}</p>
@@ -256,8 +268,8 @@ export default function LandingPage() {
         </section>
 
         <section className="landing-steps-v2" id="start">
-          <p className="landing-kicker-v2">ΠΩΣ ΞΕΚΙΝΑΣ</p>
-          <h2>Μπαίνεις, διαλέγεις ενότητα, συνεχίζεις.</h2>
+          <p className="landing-kicker-v2" data-reveal>ΠΩΣ ΞΕΚΙΝΑΣ</p>
+          <h2 data-reveal style={{ ['--reveal-delay' as string]: '40ms' }}>Μπαίνεις, διαλέγεις ενότητα, συνεχίζεις.</h2>
 
           <div className="landing-steps-grid-v2">
             {[
@@ -266,7 +278,12 @@ export default function LandingPage() {
               ['3', 'Ρώτα', 'Στείλε την απορία σου στον AI καθηγητή όταν κολλήσεις.'],
               ['4', 'Συνέχισε', 'Χτίσε ρυθμό με SOS, custom tests και παλιά θέματα.'],
             ].map(([number, title, text]) => (
-              <article key={number} className="landing-step-card-v2">
+              <article
+                key={number}
+                className="landing-step-card-v2"
+                data-reveal
+                style={{ ['--reveal-delay' as string]: `${110 + Number(number) * 70}ms` }}
+              >
                 <span className="landing-step-index-v2">{number}</span>
                 <h3>{title}</h3>
                 <p>{text}</p>
@@ -275,13 +292,13 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="landing-final-cta-v2">
+        <section className="landing-final-cta-v2" data-reveal>
           <div>
-            <p className="landing-kicker-v2 light">ΕΤΟΙΜΟΣ;</p>
-            <h2>Μπες στην πλατφόρμα και συνέχισε από εκεί που σταμάτησες.</h2>
+            <p className="landing-kicker-v2 light" data-reveal>ΕΤΟΙΜΟΣ;</p>
+            <h2 data-reveal style={{ ['--reveal-delay' as string]: '40ms' }}>Μπες στην πλατφόρμα και συνέχισε από εκεί που σταμάτησες.</h2>
           </div>
 
-          <div className="landing-final-actions-v2">
+          <div className="landing-final-actions-v2" data-reveal style={{ ['--reveal-delay' as string]: '90ms' }}>
             <Link className="landing-final-main-v2" to="/app">
               Μπες στην πλατφόρμα →
             </Link>

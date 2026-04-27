@@ -18,7 +18,7 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+    setIsMenuOpen((current) => !current);
   };
 
   const closeMenu = () => {
@@ -28,8 +28,8 @@ export default function Navigation() {
   return (
     <nav className="product-navbar-v2">
       <div className="product-navbar-inner-v2">
-        <button 
-          className="product-brand-v2 product-brand-button-v2" 
+        <button
+          className="product-brand-v2 product-brand-button-v2"
           onClick={toggleMenu}
           type="button"
           aria-expanded={isMenuOpen}
@@ -46,12 +46,7 @@ export default function Navigation() {
           <div className="product-menu-dropdown-v2">
             <div className="product-menu-header-v2">
               <strong>Πλοήγηση</strong>
-              <button 
-                className="product-menu-close-v2" 
-                onClick={closeMenu}
-                type="button"
-                aria-label="Κλείσιμο μενού"
-              >
+              <button className="product-menu-close-v2" onClick={closeMenu} type="button" aria-label="Κλείσιμο μενού">
                 ✕
               </button>
             </div>
@@ -69,21 +64,25 @@ export default function Navigation() {
                     {item.label}
                   </NavLink>
                 ) : (
-                  <span key={item.href} className="product-menu-link-v2 disabled" title="Διατίθεται μόνο για εγγεγραμμένους χρήστες">
+                  <span
+                    key={item.href}
+                    className="product-menu-link-v2 disabled"
+                    title="Διατίθεται μόνο για εγγεγραμμένους χρήστες"
+                  >
                     {item.label}
                   </span>
                 );
               })}
             </div>
-            <div className="product-menu-divider-v2"></div>
+            <div className="product-menu-divider-v2" />
             <div className="product-menu-user-v2">
               {isAuthenticated ? (
                 <>
                   <div className="product-menu-user-info-v2">
                     <strong>{currentUser?.username ?? 'student'}</strong>
                   </div>
-                  <button 
-                    className="product-menu-logout-v2" 
+                  <button
+                    className="product-menu-logout-v2"
                     onClick={() => {
                       logoutUser();
                       closeMenu();
@@ -95,18 +94,10 @@ export default function Navigation() {
                 </>
               ) : (
                 <>
-                  <NavLink 
-                    className="product-menu-link-v2" 
-                    to="/login"
-                    onClick={closeMenu}
-                  >
+                  <NavLink className="product-menu-link-v2" to="/login" onClick={closeMenu}>
                     Σύνδεση
                   </NavLink>
-                  <NavLink 
-                    className="product-menu-link-v2 primary" 
-                    to="/register"
-                    onClick={closeMenu}
-                  >
+                  <NavLink className="product-menu-link-v2 primary" to="/register" onClick={closeMenu}>
                     Εγγραφή
                   </NavLink>
                 </>

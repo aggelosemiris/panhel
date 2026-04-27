@@ -79,6 +79,12 @@ const quickPrompts: Array<{ label: string; mode: TeacherMode; prompt: string }> 
   },
 ];
 
+const subjectLabels: Record<string, string> = {
+  math: 'Μαθηματικά',
+  aoth: 'ΑΟΘ',
+  aepp: 'ΑΕΠΠ',
+};
+
 function formatTime() {
   return new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
 }
@@ -121,6 +127,14 @@ function getStateLabel(state?: TeacherDetectedState) {
     default:
       return 'Reasoning mode';
   }
+}
+
+function getSubjectLabel(subjectId: string | null | undefined) {
+  if (!subjectId) {
+    return null;
+  }
+
+  return subjectLabels[subjectId] ?? subjectId.toUpperCase();
 }
 
 function buildWelcomeMessage(username?: string): ChatMessage {
@@ -329,13 +343,13 @@ export default function SpecializedTeacherPage() {
 
   const downloadChat = () => {
     const content = messages
-      .map((message) => `[${message.timestamp}] ${message.role === 'assistant' ? 'Cortex AI' : 'Χρήστης'}:\n${message.text}`)
+      .map((message) => `[${message.timestamp}] ${message.role === 'assistant' ? 'Καθηγητής' : 'Χρήστης'}:\n${message.text}`)
       .join('\n\n---\n\n');
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `cortex-ai-chat-${new Date().toISOString().slice(0, 10)}.txt`;
+    link.download = `teacher-chat-${new Date().toISOString().slice(0, 10)}.txt`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -377,7 +391,7 @@ export default function SpecializedTeacherPage() {
         subject: selectedSubject
           ? {
               id: selectedSubject.id,
-              label: selectedSubject.greekName,
+              label: getSubjectLabel(selectedSubject.id) ?? selectedSubject.id.toUpperCase(),
             }
           : null,
       });
@@ -398,7 +412,7 @@ export default function SpecializedTeacherPage() {
       setAttachedFiles([]);
     } catch (sendError) {
       console.error('SpecializedTeacherPage handleSend error:', sendError);
-      const message = sendError instanceof Error ? sendError.message : 'Δεν μπόρεσα να πάρω απάντηση από το Cortex AI.';
+      const message = sendError instanceof Error ? sendError.message : 'Δεν μπόρεσα να πάρω απάντηση από τον καθηγητή.';
       setError(message);
       setMessages((current) => [
         ...current.map((item) => (item.id === userMessage.id ? { ...item, status: 'read' as const } : item)),
@@ -459,7 +473,7 @@ export default function SpecializedTeacherPage() {
                 }
                 onClick={() => setSelectedSubjectId(subject.id)}
               >
-                {subject.code}
+                {getSubjectLabel(subject.id)}
               </button>
             ))}
           </div>
@@ -540,7 +554,7 @@ export default function SpecializedTeacherPage() {
             </div>
           </div>
           <p className="teacher-page__teacher-card-text">
-            Socratic tutoring, subject-aware context, file reading, memory από την πρόοδό σου και προτάσεις για επόμενο
+            Socratic tutoring, subject-aware context, file reading, μνήμη από την πρόοδό σου και προτάσεις για επόμενο
             βήμα μετά από κάθε απάντηση.
           </p>
         </div>
@@ -556,7 +570,9 @@ export default function SpecializedTeacherPage() {
             <div>
               <div className="teacher-page__chat-title">Συνομιλία με τον καθηγητή</div>
               <div className="teacher-page__chat-subtitle">
-                {selectedSubject ? `Focus στο μάθημα: ${selectedSubject.greekName}` : 'Μπορείς να ρωτήσεις θεωρία, άσκηση, μεθοδολογία ή απορία πάνω στην ύλη.'}
+                {selectedSubject
+                  ? `Focus στο μάθημα: ${getSubjectLabel(selectedSubject.id)}`
+                  : 'Μπορείς να ρωτήσεις θεωρία, άσκηση, μεθοδολογία ή απορία πάνω στην ύλη.'}
               </div>
             </div>
           </div>
@@ -584,7 +600,7 @@ export default function SpecializedTeacherPage() {
 
                 <div className={`teacher-page__message-body ${message.role === 'user' ? 'teacher-page__message-body--user' : ''}`}>
                   <div className="teacher-page__message-meta">
-                    <span>{message.role === 'assistant' ? 'Cortex AI' : 'Χρήστης'}</span>
+                    <span>{message.role === 'assistant' ? 'Καθηγητής' : 'Χρήστης'}</span>
                     <span>{message.timestamp}</span>
                     {message.role === 'user' && message.status === 'read' ? <LuCheckCheck size={14} className="teacher-page__message-read" /> : null}
                   </div>
@@ -603,7 +619,9 @@ export default function SpecializedTeacherPage() {
                     <div className="teacher-page__meta-row">
                       <span className="teacher-page__state-pill">{getStateLabel(message.meta.detectedState)}</span>
                       {message.meta.subjectFocus ? (
-                        <span className="teacher-page__state-pill teacher-page__state-pill--subject">{message.meta.subjectFocus.toUpperCase()}</span>
+                        <span className="teacher-page__state-pill teacher-page__state-pill--subject">
+                          {getSubjectLabel(message.meta.subjectFocus) ?? message.meta.subjectFocus.toUpperCase()}
+                        </span>
                       ) : null}
                     </div>
                   ) : null}
