@@ -110,3 +110,15 @@
     padding: 12px 15px;
   }
 }
+
+html[data-theme='dark'] .textbook-page h1,
+html[data-theme='dark'] .textbook-page .subtitle,
+html[data-theme='dark'] .textbook-page .theory-section h2 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.22);
+}
+
+html[data-theme='dark'] .textbook-page {
+  background: transparent !important;
+  box-shadow: none !important;
+}

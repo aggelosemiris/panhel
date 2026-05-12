@@ -91,42 +91,47 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="simple-module-page">
-      <div className="module-b-hero">
+    <div className="simple-module-page profile-page-reveal">
+      <div className="module-b-hero" data-reveal>
         <h1>Προφίλ Μαθητή</h1>
         <p>Παρακολούθησε την πρόοδό σου ανά μάθημα, κεφάλαιο και συνολικό score.</p>
       </div>
 
-      <section className="profile-overview-grid">
-        <article className="profile-stat-card">
+      <section className="profile-overview-grid" data-reveal style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
+        <article className="profile-stat-card" data-reveal style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
           <span>Συνολικό ποσοστό επιτυχίας</span>
           <strong>{formatPercent(profile.overallAccuracyPercent)}</strong>
         </article>
-        <article className="profile-stat-card">
+        <article className="profile-stat-card" data-reveal style={{ '--reveal-delay': '170ms' } as React.CSSProperties}>
           <span>Σύνολο απαντημένων ερωτήσεων</span>
           <strong>{profile.totalAnsweredQuestions}</strong>
         </article>
-        <article className="profile-stat-card">
+        <article className="profile-stat-card" data-reveal style={{ '--reveal-delay': '220ms' } as React.CSSProperties}>
           <span>Πιο αδύναμο κεφάλαιο</span>
           <strong>{getChapterLabel(profile.weakestChapter)}</strong>
         </article>
-        <article className="profile-stat-card">
+        <article className="profile-stat-card" data-reveal style={{ '--reveal-delay': '270ms' } as React.CSSProperties}>
           <span>Πιο δυνατό κεφάλαιο</span>
           <strong>{getChapterLabel(profile.strongestChapter)}</strong>
         </article>
       </section>
 
-      <section className="generator-panel profile-panel">
+      <section className="generator-panel profile-panel" data-reveal style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
         <h2>Επίδοση ανά Σ/Λ</h2>
         {trueFalseBySubject.length === 0 ? (
           <p>Μόλις ξεκινήσει να γράφεται πρόοδος από τις ασκήσεις σωστού ή λάθους, εδώ θα βλέπεις την επίδοση ανά μάθημα.</p>
         ) : (
           <div className="profile-list">
-            {trueFalseBySubject.map((subjectStat) => {
+            {trueFalseBySubject.map((subjectStat, index) => {
               const subject = getSubjectById(subjectStat.subject);
 
               return (
-                <article key={`tf-${subjectStat.subject}`} className="profile-list-card">
+                <article
+                  key={`tf-${subjectStat.subject}`}
+                  className="profile-list-card"
+                  data-reveal
+                  style={{ '--reveal-delay': `${140 + index * 60}ms` } as React.CSSProperties}
+                >
                   <div>
                     <strong>{subject ? `${subject.emoji} ${subject.greekName}` : subjectStat.subject}</strong>
                     <p>{`${subjectStat.timesCorrect}/${subjectStat.timesAnswered} σωστές απαντήσεις σε Σ/Λ`}</p>
@@ -139,7 +144,7 @@ export default function ProfilePage() {
         )}
       </section>
 
-      <section className="generator-panel profile-panel">
+      <section className="generator-panel profile-panel" data-reveal style={{ '--reveal-delay': '160ms' } as React.CSSProperties}>
         <h2>Επίδοση ανά Θέμα</h2>
         <p>
           Από εδώ παρακολουθείς την απόδοσή σου στα μεμονωμένα θέματα. Για νέα AI διόρθωση πήγαινε στα{' '}
@@ -152,11 +157,16 @@ export default function ProfilePage() {
           </p>
         ) : (
           <div className="profile-list">
-            {singleTopicBySubject.map((subjectStats) => {
+            {singleTopicBySubject.map((subjectStats, index) => {
               const subject = getSubjectById(subjectStats.subject);
 
               return (
-                <article key={`topic-${subjectStats.subject}`} className="profile-list-card profile-exam-card">
+                <article
+                  key={`topic-${subjectStats.subject}`}
+                  className="profile-list-card profile-exam-card"
+                  data-reveal
+                  style={{ '--reveal-delay': `${180 + index * 60}ms` } as React.CSSProperties}
+                >
                   <div>
                     <strong>{subject ? `${subject.emoji} ${subject.greekName}` : subjectStats.subject}</strong>
                     {subjectStats.topics.map((topic) => (
@@ -179,13 +189,13 @@ export default function ProfilePage() {
         )}
       </section>
 
-      <section className="generator-panel profile-panel">
+      <section className="generator-panel profile-panel" data-reveal style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
         <h2>Μέσοι όροι διαγωνισμάτων ανά δυσκολία</h2>
         {examDifficultyBySubject.length === 0 ? (
           <p>Μόλις διορθώσεις το πρώτο διαγώνισμα με AI, εδώ θα βλέπεις μέσο όρο σε εύκολα, μέτρια και δύσκολα.</p>
         ) : (
           <div className="profile-list">
-            {examDifficultyBySubject.map((subjectStats) => {
+            {examDifficultyBySubject.map((subjectStats, index) => {
               const subject = getSubjectById(subjectStats.subject);
               const averages = [
                 subjectStats.easy.averagePercent,
@@ -199,7 +209,12 @@ export default function ProfilePage() {
                 averages.length > 0 ? averages.reduce((sum, value) => sum + value, 0) / averages.length : 0;
 
               return (
-                <article key={`exam-${subjectStats.subject}`} className="profile-list-card profile-exam-card">
+                <article
+                  key={`exam-${subjectStats.subject}`}
+                  className="profile-list-card profile-exam-card"
+                  data-reveal
+                  style={{ '--reveal-delay': `${220 + index * 60}ms` } as React.CSSProperties}
+                >
                   <div>
                     <strong>{subject ? `${subject.emoji} ${subject.greekName}` : subjectStats.subject}</strong>
                     <p>{`Εύκολα: ${formatPercent(subjectStats.easy.averagePercent)} (${subjectStats.easy.attempts})`}</p>
@@ -215,7 +230,7 @@ export default function ProfilePage() {
         )}
       </section>
 
-      <section className="generator-panel profile-panel">
+      <section className="generator-panel profile-panel" data-reveal style={{ '--reveal-delay': '240ms' } as React.CSSProperties}>
         <h2>Επίδοση ανά μάθημα</h2>
         {profile.bySubject.length === 0 ? (
           <p>
@@ -224,11 +239,16 @@ export default function ProfilePage() {
           </p>
         ) : (
           <div className="profile-list">
-            {profile.bySubject.map((subjectStat) => {
+            {profile.bySubject.map((subjectStat, index) => {
               const subject = getSubjectById(subjectStat.subject);
 
               return (
-                <article key={subjectStat.subject} className="profile-list-card">
+                <article
+                  key={subjectStat.subject}
+                  className="profile-list-card"
+                  data-reveal
+                  style={{ '--reveal-delay': `${260 + index * 60}ms` } as React.CSSProperties}
+                >
                   <div>
                     <strong>{subject ? `${subject.emoji} ${subject.greekName}` : subjectStat.subject}</strong>
                     <p>{`${subjectStat.timesCorrect}/${subjectStat.timesAnswered} σωστές απαντήσεις`}</p>
@@ -241,14 +261,19 @@ export default function ProfilePage() {
         )}
       </section>
 
-      <section className="generator-panel profile-panel">
+      <section className="generator-panel profile-panel" data-reveal style={{ '--reveal-delay': '280ms' } as React.CSSProperties}>
         <h2>Επίδοση ανά κεφάλαιο</h2>
         {chapterStats.length === 0 ? (
           <p>Μόλις απαντήσεις στα πρώτα quiz, εδώ θα εμφανιστεί η ανάλυση ανά κεφάλαιο.</p>
         ) : (
           <div className="profile-list">
-            {chapterStats.map((chapterStat) => (
-              <article key={`${chapterStat.subject}-${chapterStat.chapterId}`} className="profile-list-card">
+            {chapterStats.map((chapterStat, index) => (
+              <article
+                key={`${chapterStat.subject}-${chapterStat.chapterId}`}
+                className="profile-list-card"
+                data-reveal
+                style={{ '--reveal-delay': `${300 + index * 45}ms` } as React.CSSProperties}
+              >
                 <div>
                   <strong>{getChapterLabel(chapterStat)}</strong>
                   <p>{`${chapterStat.timesCorrect}/${chapterStat.timesAnswered} σωστές απαντήσεις`}</p>

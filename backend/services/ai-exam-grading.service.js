@@ -24,7 +24,13 @@ const DIFFICULTY_LABELS = {
 
 function resolveExamPdfPath(relativePublicPath) {
   const normalizedPath = String(relativePublicPath || '').replace(/^\/+/, '');
-  return path.join(FRONTEND_PUBLIC_DIRECTORY, normalizedPath);
+  const absolutePath = path.resolve(FRONTEND_PUBLIC_DIRECTORY, normalizedPath);
+
+  if (!absolutePath.startsWith(path.resolve(FRONTEND_PUBLIC_DIRECTORY) + path.sep)) {
+    throw new Error('Invalid exam PDF path');
+  }
+
+  return absolutePath;
 }
 
 async function readPdfAsBase64(relativePublicPath) {

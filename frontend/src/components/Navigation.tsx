@@ -8,7 +8,7 @@ const navItems = [
   { href: '/tests/chapter', label: 'Διαγωνίσματα', enabled: true },
   { href: '/generator', label: 'Generator', enabled: true },
   { href: '/panic-mode', label: 'SOS Θέματα', enabled: true },
-  { href: '/single-topics', label: 'Μεμονωμένα', enabled: true },
+  { href: '/single-topics', label: 'Μεμονωμένες Ασκήσεις', enabled: true },
   { href: '/profile', label: 'Στατιστικά', enabled: false },
   { href: '/specialized-teacher', label: 'Cortex AI', enabled: false },
 ];

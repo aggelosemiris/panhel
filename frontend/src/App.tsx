@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navigation from './components/Navigation.tsx';
+import FloatingThemeToggle from './components/FloatingThemeToggle.tsx';
 import { QuizProvider } from './context/QuizContext.tsx';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import Dashboard from './pages/Dashboard.tsx';
@@ -132,6 +133,7 @@ function AppLayout() {
       <ScrollToTop />
       <ScrollRevealManager />
       {hideNavigation ? null : <Navigation />}
+      <FloatingThemeToggle />
       <main className={`main-content ${hideNavigation ? 'main-content-marketing' : ''}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -179,6 +181,7 @@ function AppLayout() {
           <Route path="/single-topics/:subjectID" element={<SingleTopicsPage />} />
           <Route path="/single-topics/:subjectID/:topicKey" element={<SingleTopicsPage />} />
           <Route path="/panic-mode" element={<PanicModePage />} />
+          <Route path="/panic-mode/:subjectID" element={<PanicModePage />} />
 
           <Route path="/methodology" element={<SubjectOnlyModulePage moduleKey="methodology" />} />
           <Route path="/methodology/:subjectID" element={<SubjectOnlyModulePage moduleKey="methodology" />} />

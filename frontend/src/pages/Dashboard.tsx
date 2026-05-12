@@ -61,9 +61,8 @@ const planCards = [
 const toolCards = [
   { icon: LuSettings, title: 'Generator', text: 'Φτιάξε δικό σου διαγώνισμα.', href: '/generator', locked: false },
   { icon: LuTrophy, title: 'Στατιστικά', text: 'Προφίλ μαθητή και επίδοση.', href: '/profile', locked: true },
-  { icon: LuFileText, title: 'Μεμονωμένα Θέματα', text: 'Θέματα Α, Β, Γ, Δ ξεχωριστά.', href: '/single-topics', locked: false },
   { icon: LuGraduationCap, title: 'Σωστό / Λάθος', text: 'Γρήγορη θεωρητική επανάληψη.', href: '/true-false', locked: false },
-  { icon: LuBookOpen, title: 'Μεθοδολογία', text: 'Οδηγοί ανά μάθημα και τύπο θέματος.', href: '/methodology', locked: false },
+  { icon: LuFileText, title: 'Μεμονωμένες Ασκήσεις', text: 'Μεμονωμένες ασκήσεις από κάθε ξεχωριστό κεφάλαιο.', href: '/single-topics', locked: false },
   { icon: LuHistory, title: 'ΟΕΦΕ', text: 'Παλαιότερα θέματα ΟΕΦΕ.', href: '/oefe', locked: false },
 ];
 
@@ -233,15 +232,16 @@ export default function Dashboard() {
           {toolCards.map((tool) => {
             const Icon = tool.icon;
             const disabled = tool.locked && !isAuthenticated;
+            const iconSize = tool.href === '/single-topics' ? 18 : 22;
 
             const content = (
               <article
-                className={`dashboard-tool-card-v2 ${disabled ? 'locked' : ''}`}
+                className={`dashboard-tool-card-v2 ${tool.href === '/single-topics' ? 'single-topics-tool-card-v2' : ''} ${tool.href === '/oefe' ? 'oefe-tool-card-v2' : ''} ${disabled ? 'locked' : ''}`}
                 data-reveal
                 style={{ ['--reveal-delay' as string]: `${100 + toolCards.indexOf(tool) * 65}ms` }}
               >
                 <div className="dashboard-tool-icon-v2">
-                  <Icon size={22} />
+                  <Icon size={iconSize} />
                 </div>
                 <div className="dashboard-tool-copy-v2">
                   <h3>{tool.title}</h3>

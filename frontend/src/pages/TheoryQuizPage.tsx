@@ -166,7 +166,7 @@ export default function TheoryQuizPage() {
         <p>Επίλεξε κεφάλαιο για να μεταφερθείς στο αντίστοιχο quiz.</p>
       </div>
 
-      <section className="generator-panel">
+      <section className="generator-panel theory-quiz-panel">
         <h2>{`${subject.emoji} ${subject.greekName}`}</h2>
         <div className="theory-quiz-smart-cta">
           <div>
@@ -177,22 +177,24 @@ export default function TheoryQuizPage() {
             Ξεκίνα Smart Quiz
           </button>
         </div>
-        <div className="generator-chapter-groups">
-          {chapterGroups.map((group) => (
-            <div key={group.id} className="generator-chapter-group">
-              <h3>{group.title}</h3>
-              <div className="generator-chapter-list">
-                {group.chapters.map((chapter) => (
-                  <ChapterButton
-                    key={chapter.id}
-                    chapter={chapter}
-                    available={getTheoryQuizQuestions(chapter.id).length > 0}
-                    onSelect={() => handleChapterSelect(chapter)}
-                  />
-                ))}
+        <div className="theory-quiz-chapters-panel">
+          <div className="generator-chapter-groups">
+            {chapterGroups.map((group) => (
+              <div key={group.id} className="generator-chapter-group">
+                <h3>{group.title}</h3>
+                <div className="generator-chapter-list">
+                  {group.chapters.map((chapter) => (
+                    <ChapterButton
+                      key={chapter.id}
+                      chapter={chapter}
+                      available={getTheoryQuizQuestions(chapter.id).length > 0}
+                      onSelect={() => handleChapterSelect(chapter)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
     </div>

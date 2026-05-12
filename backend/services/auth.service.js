@@ -13,6 +13,10 @@ const DEFAULT_STORE = {
 
 let pendingWrite = Promise.resolve();
 
+function isVerificationBypassed() {
+  return process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_VERIFICATION_BYPASS === 'true';
+}
+
 function normalizeContact(contact) {
   return String(contact ?? '').trim().toLowerCase();
 }
@@ -83,7 +87,9 @@ function isExpired(isoDate) {
 }
 
 function buildDeliveryPayload(code) {
-  console.log(`[AUTH CODE] ${code}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[AUTH CODE] ${code}`);
+  }
 
   return process.env.NODE_ENV === 'production'
     ? { deliveryMethod: 'email' }
@@ -130,6 +136,7 @@ async function completeRegistration({ contact, code, password, fullName, usernam
   const normalizedContact = normalizeContact(contact);
   const normalizedUsername = normalizeUsername(username);
   const store = await readStore();
+  const allowVerificationBypass = isVerificationBypassed();
 
   if (password.length < 12) {
     throw new Error('Ο κωδικός πρέπει να έχει τουλάχιστον 12 χαρακτήρες.');
@@ -139,12 +146,14 @@ async function completeRegistration({ contact, code, password, fullName, usernam
     (item) => normalizeContact(item.contact) === normalizedContact,
   );
 
-  if (!pendingRegistration || isExpired(pendingRegistration.expiresAt)) {
+  if ((!pendingRegistration || isExpired(pendingRegistration.expiresAt)) && !allowVerificationBypass) {
     throw new Error('Ο κωδικός επιβεβαίωσης έληξε. Ζήτησε νέο κωδικό.');
   }
 
-  const isCodeValid = await bcrypt.compare(String(code ?? '').trim(), pendingRegistration.codeHash);
-  if (!isCodeValid) {
+  const isCodeValid = pendingRegistration
+    ? await bcrypt.compare(String(code ?? '').trim(), pendingRegistration.codeHash)
+    : false;
+  if (!isCodeValid && !allowVerificationBypass) {
     throw new Error('Ο κωδικός επιβεβαίωσης δεν είναι σωστός.');
   }
 
@@ -171,7 +180,9 @@ async function completeRegistration({ contact, code, password, fullName, usernam
   };
 
   store.users.push(user);
-  store.pendingRegistrations = store.pendingRegistrations.filter((item) => item.id !== pendingRegistration.id);
+  if (pendingRegistration) {
+    store.pendingRegistrations = store.pendingRegistrations.filter((item) => item.id !== pendingRegistration.id);
+  }
   await writeStore(store);
 
   return sanitizeUser(user);

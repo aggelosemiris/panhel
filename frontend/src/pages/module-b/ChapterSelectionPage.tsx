@@ -33,7 +33,7 @@ export default function ChapterSelectionPage() {
   ];
 
   return (
-    <div className="module-b-page">
+    <div className="module-b-page tests-chapter-page">
       <div className="module-b-hero">
         <button className="module-b-back-button" onClick={() => navigate('/tests/chapter')}>
           ← Πίσω στα μαθήματα
@@ -44,7 +44,7 @@ export default function ChapterSelectionPage() {
         <p>Επίλεξε κεφάλαιο για να δεις τις διαθέσιμες ενότητες.</p>
       </div>
 
-      <div className="module-b-groups">
+      <div className="module-b-groups tests-chapter-panel">
         {chapterGroups.map((group) => (
           <section key={group.id} className="module-b-group-card">
             {subject.chapterGroups && (

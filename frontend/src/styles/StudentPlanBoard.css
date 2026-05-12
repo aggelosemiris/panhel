@@ -1,0 +1,277 @@
+/* Chalk-style font with texture effect */
+@import url('https://fonts.googleapis.com/css2?family=Recoleta:wght@400;700&display=swap');
+
+.student-plan-board {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===== Chalk Text Effect ===== */
+.chalk-title,
+.chalk-text {
+  font-family: 'Caveat', 'Segoe UI', cursive;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 
+    2px 2px 3px rgba(255, 255, 255, 0.4),
+    -1px -1px 2px rgba(0, 0, 0, 0.1),
+    3px 3px 6px rgba(0, 0, 0, 0.08);
+  filter: contrast(1.1) brightness(1.05);
+  position: relative;
+}
+
+/* Chalk texture overlay */
+.chalk-title::before,
+.chalk-text::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  color: rgba(255, 255, 255, 0.1);
+  text-shadow: 
+    1px 1px 2px rgba(0, 0, 0, 0.1),
+    -1px -1px 1px rgba(255, 255, 255, 0.2);
+}
+
+/* ===== Header Section ===== */
+.plan-header {
+  margin-bottom: 32px;
+}
+
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 32px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 24px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.trophy-badge {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.header-title {
+  flex: 1;
+}
+
+.platform-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #667eea;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+}
+
+.header-title h1 {
+  margin: 8px 0 12px 0;
+  font-size: 48px;
+  font-weight: 800;
+  color: #1a2a4e;
+  font-family: 'Caveat', cursive;
+  line-height: 1.2;
+}
+
+.chalk-title {
+  color: #1a2a4e;
+  font-size: 48px;
+  font-weight: 800;
+  text-shadow: 
+    3px 3px 4px rgba(255, 255, 255, 0.6),
+    -1px -1px 2px rgba(0, 0, 0, 0.15),
+    0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ===== Stats Container ===== */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(102, 126, 234, 0.1);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  border-color: rgba(102, 126, 234, 0.2);
+}
+
+.stat-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #718096;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.stat-value {
+  display: block;
+  font-size: 36px;
+  font-weight: 800;
+  color: #1a2a4e;
+  font-family: 'Caveat', cursive;
+  text-shadow: 
+    2px 2px 3px rgba(255, 255, 255, 0.5),
+    -1px -1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Subjects Progress ===== */
+.subjects-progress {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.subject-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.subject-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.subject-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.subject-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a2a4e;
+  font-family: 'Caveat', cursive;
+  text-shadow: 
+    1px 1px 2px rgba(255, 255, 255, 0.4),
+    -1px -1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.subject-percentage {
+  font-size: 14px;
+  font-weight: 700;
+  color: #4a5568;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(226, 232, 240, 0.8);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1) inset;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .student-plan-board {
+    padding: 20px;
+  }
+
+  .header-top {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .trophy-badge {
+    width: 60px;
+    height: 60px;
+  }
+
+  .chalk-title {
+    font-size: 32px;
+  }
+
+  .header-title h1 {
+    font-size: 32px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  .subject-name {
+    font-size: 16px;
+  }
+
+  .stats-container {
+    grid-template-columns: 1fr;
+  }
+
+  .subjects-progress {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Import Caveat font for chalk effect */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');

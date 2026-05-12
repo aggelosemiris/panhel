@@ -4,6 +4,15 @@ import { useAuth } from '../context/AuthContext.tsx';
 
 type RegisterStep = 1 | 2 | 3 | 4 | 5;
 
+function shouldSuppressRegisterError(message?: string) {
+  if (!message) {
+    return false;
+  }
+
+  const normalized = message.toLowerCase();
+  return normalized.includes('κωδικός επιβεβαίωσης') || normalized.includes('verification');
+}
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { registerUser, startRegistration } = useAuth();
@@ -80,7 +89,9 @@ export default function RegisterPage() {
     setIsSubmitting(false);
 
     if (!result.ok) {
-      setError(result.message ?? 'Δεν μπόρεσα να δημιουργήσω λογαριασμό.');
+      if (!shouldSuppressRegisterError(result.message)) {
+        setError(result.message ?? 'Δεν μπόρεσα να δημιουργήσω λογαριασμό.');
+      }
       return;
     }
 
@@ -125,8 +136,8 @@ export default function RegisterPage() {
         <span className="landing-kicker">ΔΗΜΙΟΥΡΓΙΑ ΛΟΓΑΡΙΑΣΜΟΥ</span>
         <h1>Φτιάξε τον λογαριασμό σου</h1>
         <p className="auth-intro-text">
-          Πρώτα επιβεβαιώνεις email ή κινητό με κωδικό, μετά βάζεις κωδικό πρόσβασης και τα στοιχεία σου. Έτσι ο
-          λογαριασμός σου μένει ασφαλής και καθαρός σαν κανονική πλατφόρμα.
+          Πρώτα επιβεβαιώνεις email ή κινητό με κωδικό, μετά βάζεις κωδικό πρόσβασης και τα στοιχεία σου.
+          Έτσι ο λογαριασμός σου μένει ασφαλής και καθαρός σαν κανονική πλατφόρμα.
         </p>
 
         <div className="auth-steps">
@@ -147,7 +158,9 @@ export default function RegisterPage() {
               value={contact}
               onChange={(event) => setContact(event.target.value)}
             />
-            <p className="auth-helper-text valid">Με αυτό θα στέλνεται ο κωδικός επιβεβαίωσης και με αυτό θα συνδέεσαι.</p>
+            <p className="auth-helper-text valid">
+              Με αυτό θα στέλνεται ο κωδικός επιβεβαίωσης και με αυτό θα συνδέεσαι.
+            </p>
           </div>
         ) : null}
 

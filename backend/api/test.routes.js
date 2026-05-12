@@ -10,6 +10,15 @@ const { updateStudentStats } = require('../services/student-stats.service');
 
 const router = express.Router();
 
+const MAX_UPLOAD_COUNT = 5;
+const MAX_UPLOAD_BASE64_CHARS = 16 * 1024 * 1024;
+const ALLOWED_UPLOAD_MIME_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
+
 const SUBJECT_LABELS = {
   aoth: 'ΑΟΘ',
   aepp: 'ΑΕΠΠ',
@@ -34,6 +43,24 @@ function resolveUserId(req) {
 
 function getChapterTestPdfPath(subjectId, chapterId, tier) {
   return `/tests/${subjectId}/${chapterId}-${tier}.pdf`;
+}
+
+function validateUploadedFiles(uploadedFiles) {
+  if (!Array.isArray(uploadedFiles) || uploadedFiles.length === 0) {
+    return 'At least one uploaded file is required.';
+  }
+
+  if (uploadedFiles.length > MAX_UPLOAD_COUNT) {
+    return `Upload up to ${MAX_UPLOAD_COUNT} files at a time.`;
+  }
+
+  const invalidFile = uploadedFiles.find((file) => {
+    const mimeType = String(file?.mimeType || '').toLowerCase();
+    const dataUrl = String(file?.dataUrl || '');
+    return !ALLOWED_UPLOAD_MIME_TYPES.has(mimeType) || dataUrl.length > MAX_UPLOAD_BASE64_CHARS;
+  });
+
+  return invalidFile ? 'Upload only PDF, PNG, JPG or WEBP files under the allowed size.' : null;
 }
 
 router.get('/:subjectID/:chapterID/available-tiers', (req, res) => {
@@ -75,10 +102,11 @@ router.post('/:subjectID/:chapterID/:tier/grade-submission', async (req, res, ne
     const { subjectID, chapterID, tier } = req.params;
     const { uploadedFiles = [], chapterTitle } = req.body;
 
-    if (!Array.isArray(uploadedFiles) || uploadedFiles.length === 0) {
+    const uploadError = validateUploadedFiles(uploadedFiles);
+    if (uploadError) {
       return res.status(400).json({
         success: false,
-        message: 'At least one uploaded file is required.',
+        message: uploadError,
       });
     }
 
@@ -137,10 +165,11 @@ router.post('/single-topic/:subjectID/:topicKey/grade-submission', async (req, r
     const { subjectID, topicKey } = req.params;
     const { uploadedFiles = [] } = req.body;
 
-    if (!Array.isArray(uploadedFiles) || uploadedFiles.length === 0) {
+    const uploadError = validateUploadedFiles(uploadedFiles);
+    if (uploadError) {
       return res.status(400).json({
         success: false,
-        message: 'At least one uploaded file is required.',
+        message: uploadError,
       });
     }
 

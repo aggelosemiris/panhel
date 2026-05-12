@@ -132,7 +132,7 @@ export default function TrueFalsePage() {
   };
 
   return (
-    <div className="simple-module-page">
+    <div className="simple-module-page true-false-page">
       <div className="module-b-hero">
         <button className="module-b-back-button" onClick={() => navigate('/true-false')} type="button">
           ← Πίσω στα μαθήματα
@@ -141,24 +141,26 @@ export default function TrueFalsePage() {
         <p>Επίλεξε κεφάλαιο και θα λυθείς ερώτηση-ερώτηση μόνο με απαντήσεις Σωστό ή Λάθος.</p>
       </div>
 
-      <section className="generator-panel">
+      <section className="generator-panel true-false-panel">
         <h2>{`${subject.emoji} ${subject.greekName}`}</h2>
-        <div className="generator-chapter-groups">
-          {chapterGroups.map((group) => (
-            <div key={group.id} className="generator-chapter-group">
-              <h3>{group.title}</h3>
-              <div className="generator-chapter-list">
-                {group.chapters.map((chapter) => (
-                  <ChapterButton
-                    key={chapter.id}
-                    chapter={chapter}
-                    available={getTrueFalseQuestions(chapter.id).length > 0}
-                    onSelect={() => handleChapterSelect(chapter)}
-                  />
-                ))}
+        <div className="true-false-chapters-panel">
+          <div className="generator-chapter-groups">
+            {chapterGroups.map((group) => (
+              <div key={group.id} className="generator-chapter-group">
+                <h3>{group.title}</h3>
+                <div className="generator-chapter-list">
+                  {group.chapters.map((chapter) => (
+                    <ChapterButton
+                      key={chapter.id}
+                      chapter={chapter}
+                      available={getTrueFalseQuestions(chapter.id).length > 0}
+                      onSelect={() => handleChapterSelect(chapter)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
     </div>
