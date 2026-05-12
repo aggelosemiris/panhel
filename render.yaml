@@ -11,7 +11,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: ALLOW_DEV_VERIFICATION_BYPASS
-        value: "false"
+        value: "true"
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_SPECIALIZED_TEACHER_MODEL

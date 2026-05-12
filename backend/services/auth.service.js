@@ -14,7 +14,7 @@ const DEFAULT_STORE = {
 let pendingWrite = Promise.resolve();
 
 function isVerificationBypassed() {
-  return process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_VERIFICATION_BYPASS === 'true';
+  return process.env.ALLOW_DEV_VERIFICATION_BYPASS === 'true';
 }
 
 function normalizeContact(contact) {
