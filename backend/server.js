@@ -19,6 +19,7 @@ const generatorRoutes = require('./api/generator.routes');
 const pastExamRoutes = require('./api/past-exam.routes');
 const essayRoutes = require('./api/essay.routes');
 const userRoutes = require('./api/user.routes');
+const findocRoutes = require('./api/findoc.routes');
 
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -28,21 +29,27 @@ function buildAllowedOrigins() {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
-  const defaultOrigins = isProduction
-    ? ['https://panhel-app.onrender.com']
-    : ['http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:3000', 'http://127.0.0.1:5000'];
+  const localOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5000',
+  ];
+  const productionOrigins = ['https://panhel-app.onrender.com'];
 
-  return new Set([...defaultOrigins, ...configuredOrigins]);
+  return new Set([...localOrigins, ...productionOrigins, ...configuredOrigins]);
 }
 
 const allowedOrigins = buildAllowedOrigins();
+const localhostOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]):\d+$/;
+const allowAnyOriginInDev = process.env.ALLOW_ALL_CORS === 'true' || !isProduction;
 
 // === Security & Middleware ===
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.has(origin)) {
+    if (!origin || allowAnyOriginInDev || allowedOrigins.has(origin) || localhostOriginPattern.test(origin)) {
       return callback(null, true);
     }
 
@@ -62,6 +69,10 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => (
+    req.path === '/api/users/specialized-teacher/respond' ||
+    req.path === '/api/users/specialized-teacher/stream'
+  ),
 });
 app.use(limiter);
 
@@ -101,6 +112,9 @@ app.use('/api/exams', pastExamRoutes);
 
 // Module E: Essay AI Sandbox
 app.use('/api/essays', essayRoutes);
+
+// FinDoc AI: grounded invoice and receipt QA
+app.use('/api/findoc', findocRoutes);
 
 const frontendBuildPath = path.join(__dirname, '..', 'frontend', 'build');
 const generatedExamsPath = path.join(__dirname, 'data', 'generated-exams');

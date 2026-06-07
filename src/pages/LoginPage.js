@@ -1,0 +1,4 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+export default function LoginPage() {
+    return (_jsxs("div", { className: "login-page", children: [_jsx("h1", { children: "\u03A3\u03CD\u03BD\u03B4\u03B5\u03C3\u03B7" }), _jsxs("form", { children: [_jsx("input", { type: "email", placeholder: "\u0397\u03BB\u03B5\u03BA\u03C4\u03C1\u03BF\u03BD\u03B9\u03BA\u03AE \u03B4\u03B9\u03B5\u03CD\u03B8\u03C5\u03BD\u03C3\u03B7" }), _jsx("input", { type: "password", placeholder: "\u039A\u03C9\u03B4\u03B9\u03BA\u03CC\u03C2 \u03C0\u03C1\u03CC\u03C3\u03B2\u03B1\u03C3\u03B7\u03C2" }), _jsx("button", { children: "\u03A3\u03CD\u03BD\u03B4\u03B5\u03C3\u03B7" })] }), _jsxs("p", { children: ["\u0394\u03B5\u03BD \u03AD\u03C7\u03B5\u03C4\u03B5 \u03BB\u03BF\u03B3\u03B1\u03C1\u03B9\u03B1\u03C3\u03BC\u03CC; ", _jsx("a", { href: "/register", children: "\u0395\u03B3\u03B3\u03C1\u03B1\u03C6\u03B5\u03AF\u03C4\u03B5 \u03B5\u03B4\u03CE" })] })] }));
+}

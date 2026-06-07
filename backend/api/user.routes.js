@@ -10,7 +10,10 @@ const {
   getStudentWeakChapters,
   updateStudentStats,
 } = require('../services/student-stats.service');
-const { askSpecializedTeacher } = require('../services/specialized-teacher.service');
+const {
+  askSpecializedTeacher,
+  streamSpecializedTeacher,
+} = require('../services/specialized-teacher.service');
 const {
   generateExplanationLesson,
   getExplanationLessons,
@@ -125,6 +128,68 @@ router.post('/specialized-teacher/respond', async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+});
+
+router.post('/specialized-teacher/stream', async (req, res) => {
+  const sendEvent = (payload) => {
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  };
+
+  try {
+    const userId = resolveUserId(req);
+    const baseProfile = await getStudentProfile(userId);
+    const examDifficultyBySubject = await getExamDifficultyStatsBySubject(userId);
+    const singleTopicBySubject = await getSingleTopicStatsBySubject(userId);
+    const profile = {
+      ...baseProfile,
+      examDifficultyBySubject,
+      singleTopicBySubject,
+    };
+
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    sendEvent({ type: 'start' });
+
+    const response = await streamSpecializedTeacher({
+      question: req.body?.question,
+      context: req.body?.context,
+      profile,
+      onDelta: (delta) => sendEvent({ type: 'delta', delta }),
+    });
+
+    sendEvent({
+      type: 'done',
+      meta: {
+        provider: response.provider,
+        model: response.model,
+        detectedState: response.detectedState,
+        subjectFocus: response.subjectFocus,
+        suggestions: response.suggestions ?? [],
+      },
+      profile,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown teacher stream error';
+    console.error('[specialized-teacher] stream route failed:', message);
+
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message,
+      });
+      return;
+    }
+
+    sendEvent({
+      type: 'error',
+      message: 'Παρουσιάστηκε προσωρινό πρόβλημα στη σύνδεση με τον AI Καθηγητή. Δοκίμασε ξανά σε λίγο.',
+    });
+  } finally {
+    res.end();
   }
 });
 

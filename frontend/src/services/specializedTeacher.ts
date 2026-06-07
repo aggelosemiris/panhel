@@ -1,7 +1,22 @@
 import { DEFAULT_QUIZ_USER_ID } from '../context/QuizContext.tsx';
 import type { StudentProfileStats } from './studentStats.ts';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ?? '/api';
+function resolveApiBaseUrl() {
+  const configuredUrl = process.env.REACT_APP_API_URL;
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const isLocalHost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+
+    // When the app is opened on localhost:3000, talk directly to the backend.
+    // This avoids stale CRA proxy behavior and relies on the backend CORS allowlist.
+    if (isLocalHost && window.location.port !== '5000') return 'http://localhost:5000/api';
+  }
+
+  return configuredUrl ?? '/api';
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export type TeacherChatRole = 'user' | 'assistant';
 export type TeacherMode = 'normal' | 'exercise' | 'explain' | 'methodology';
@@ -51,6 +66,11 @@ export type TeacherReplyPayload = {
   provider?: string;
   meta?: TeacherReplyMeta;
   profile: StudentProfileStats;
+};
+
+export type TeacherStreamHandlers = {
+  onDelta: (delta: string) => void;
+  onMeta?: (meta: TeacherReplyMeta, profile?: StudentProfileStats) => void;
 };
 
 export type AskSpecializedTeacherOptions = {
@@ -233,6 +253,107 @@ export async function askSpecializedTeacherWithContext(
       context,
     }),
   });
+}
+
+export async function streamSpecializedTeacherWithContext(
+  question: string,
+  options: AskSpecializedTeacherOptions = {},
+  handlers: TeacherStreamHandlers,
+) {
+  const userId = options.userId ?? DEFAULT_QUIZ_USER_ID;
+  const context = buildTeacherContext(options);
+  const response = await fetch(`${API_BASE_URL}/users/specialized-teacher/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
+    },
+    body: JSON.stringify({
+      userId,
+      question,
+      context,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorPayload = await response.json().catch(() => null);
+    throw new Error(errorPayload?.message ?? `Teacher stream failed with status ${response.status}`);
+  }
+
+  if (!response.body) {
+    throw new Error('Teacher stream response has no body');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullReply = '';
+  let finalMeta: TeacherReplyMeta | undefined;
+  let finalProfile: StudentProfileStats | undefined;
+
+  const consumeEvent = (eventText: string) => {
+    const dataLines = eventText
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('data:'))
+      .map((line) => line.slice(5).trim());
+
+    if (!dataLines.length) return;
+
+    const raw = dataLines.join('\n');
+    const payload = JSON.parse(raw) as {
+      type?: string;
+      delta?: string;
+      message?: string;
+      meta?: TeacherReplyMeta;
+      profile?: StudentProfileStats;
+    };
+
+    if (payload.type === 'delta' && payload.delta) {
+      fullReply += payload.delta;
+      handlers.onDelta(payload.delta);
+      return;
+    }
+
+    if (payload.type === 'done') {
+      finalMeta = payload.meta;
+      finalProfile = payload.profile;
+      if (finalMeta) handlers.onMeta?.(finalMeta, finalProfile);
+      return;
+    }
+
+    if (payload.type === 'error') {
+      throw new Error(payload.message ?? 'Teacher stream error');
+    }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const events = buffer.split('\n\n');
+    buffer = events.pop() ?? '';
+
+    for (const eventText of events) {
+      if (eventText.trim()) {
+        consumeEvent(eventText);
+      }
+    }
+  }
+
+  if (buffer.trim()) {
+    consumeEvent(buffer);
+  }
+
+  return {
+    success: true,
+    reply: fullReply,
+    model: finalMeta?.model ?? 'stream',
+    provider: finalMeta?.provider,
+    meta: finalMeta,
+    profile: finalProfile as StudentProfileStats,
+  } satisfies TeacherReplyPayload;
 }
 
 export async function listExplanationLessons(userId = DEFAULT_QUIZ_USER_ID) {

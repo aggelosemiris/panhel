@@ -24,6 +24,7 @@ import SubjectOnlyModulePage from './pages/SubjectOnlyModulePage.tsx';
 import SingleTopicsPage from './pages/SingleTopicsPage.tsx';
 import SpecializedTeacherPage from './pages/SpecializedTeacherPage.tsx';
 import PanicModePage from './pages/PanicModePage.tsx';
+import FinDocAiPage from './pages/FinDocAiPage.tsx';
 
 import TextbookPage from './pages/module-a/TextbookPage.tsx';
 import ChapterPage from './pages/module-a/ChapterPage.tsx';
@@ -126,15 +127,21 @@ function AppLayout() {
     location.pathname === '/login' ||
     location.pathname === '/register' ||
     location.pathname === '/terms' ||
-    location.pathname === '/privacy';
+    location.pathname === '/privacy' ||
+    location.pathname === '/specialized-teacher';
+  const isCortexPage = location.pathname === '/specialized-teacher';
 
   return (
     <div className="app">
       <ScrollToTop />
       <ScrollRevealManager />
       {hideNavigation ? null : <Navigation />}
-      <FloatingThemeToggle />
-      <main className={`main-content ${hideNavigation ? 'main-content-marketing' : ''}`}>
+      {isCortexPage ? null : <FloatingThemeToggle />}
+      <main
+        className={`main-content ${hideNavigation ? 'main-content-marketing' : ''} ${
+          isCortexPage ? 'main-content-cortex' : ''
+        }`}
+      >
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -182,6 +189,7 @@ function AppLayout() {
           <Route path="/single-topics/:subjectID/:topicKey" element={<SingleTopicsPage />} />
           <Route path="/panic-mode" element={<PanicModePage />} />
           <Route path="/panic-mode/:subjectID" element={<PanicModePage />} />
+          <Route path="/findoc-ai" element={<FinDocAiPage />} />
 
           <Route path="/methodology" element={<SubjectOnlyModulePage moduleKey="methodology" />} />
           <Route path="/methodology/:subjectID" element={<SubjectOnlyModulePage moduleKey="methodology" />} />
