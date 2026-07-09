@@ -131,6 +131,14 @@ function AppLayout() {
     location.pathname === '/specialized-teacher';
   const isCortexPage = location.pathname === '/specialized-teacher';
 
+  React.useEffect(() => {
+    document.body.classList.toggle('is-cortex-route', isCortexPage);
+
+    return () => {
+      document.body.classList.remove('is-cortex-route');
+    };
+  }, [isCortexPage]);
+
   return (
     <div className="app">
       <ScrollToTop />

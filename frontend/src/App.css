@@ -15745,3 +15745,70 @@ html[data-theme='dark'] .cortex-v2-form button:first-child:hover {
     padding-inline: 12px;
   }
 }
+
+/* Cortex route viewport lock: the page never scrolls, only the chat transcript does. */
+body.is-cortex-route {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+body.is-cortex-route #root,
+body.is-cortex-route .app,
+body.is-cortex-route .main-content,
+body.is-cortex-route .main-content-cortex {
+  width: 100%;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+body.is-cortex-route .main-content-cortex {
+  display: block !important;
+}
+
+body.is-cortex-route #teacher-app.cortex-v2-shell {
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+body.is-cortex-route .cortex-v2-sidebar,
+body.is-cortex-route .cortex-v2-main {
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+body.is-cortex-route .cortex-v2-sidebar-inner,
+body.is-cortex-route .cortex-v2-main {
+  min-height: 0;
+}
+
+body.is-cortex-route .cortex-v2-main {
+  display: flex;
+  flex-direction: column;
+}
+
+body.is-cortex-route .cortex-v2-header,
+body.is-cortex-route .cortex-v2-composer {
+  flex: 0 0 auto;
+}
+
+body.is-cortex-route .cortex-v2-chat {
+  flex: 1 1 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+body.is-cortex-route .cortex-v2-composer {
+  position: relative !important;
+  inset: auto !important;
+}
