@@ -85,6 +85,57 @@ const MATH_SINGLE_TOPIC_SECTION_GROUPS: Record<string, string[][]> = {
   ],
 };
 
+const AOTH_SINGLE_TOPIC_SECTION_GROUPS: Record<string, string[][]> = {
+  'aoth-1': [
+    ['aoth-1-1', 'aoth-1-2'],
+    ['aoth-1-3', 'aoth-1-4'],
+    ['aoth-1-5', 'aoth-1-6'],
+    ['aoth-1-7', 'aoth-1-8'],
+    ['aoth-1-9', 'aoth-1-10'],
+    ['aoth-1-11', 'aoth-1-12'],
+  ],
+  'aoth-2': [
+    ['aoth-2-1', 'aoth-2-2', 'aoth-2-3'],
+    ['aoth-2-4', 'aoth-2-5', 'aoth-2-6'],
+    ['aoth-2-7', 'aoth-2-8'],
+    ['aoth-2-9', 'aoth-2-10', 'aoth-2-11', 'aoth-2-12'],
+    ['aoth-2-13', 'aoth-2-14'],
+    ['aoth-2-15'],
+  ],
+  'aoth-3': [
+    ['aoth-3-1a', 'aoth-3-2a'],
+    ['aoth-3-3a', 'aoth-3-4a', 'aoth-3-5a'],
+    ['aoth-3-6a', 'aoth-3-7a'],
+    ['aoth-3-8', 'aoth-3-9', 'aoth-3-10'],
+    ['aoth-3-11', 'aoth-3-12', 'aoth-3-13'],
+    ['aoth-3-14'],
+  ],
+  'aoth-4': [
+    ['aoth-4-1', 'aoth-4-2', 'aoth-4-3'],
+    ['aoth-4-4', 'aoth-4-5'],
+    ['aoth-4-6', 'aoth-4-7'],
+    ['aoth-4-8', 'aoth-4-9'],
+  ],
+  'aoth-5': [
+    ['aoth-5-1', 'aoth-5-2'],
+    ['aoth-5-3', 'aoth-5-4'],
+    ['aoth-5-5'],
+  ],
+  'aoth-7': [
+    ['aoth-7-1', 'aoth-7-2'],
+    ['aoth-7-3', 'aoth-7-4'],
+    ['aoth-7-7', 'aoth-7-9', 'aoth-7-10'],
+  ],
+  'aoth-9': [
+    ['aoth-9-1', 'aoth-9-2'],
+    ['aoth-9-3', 'aoth-9-5'],
+    ['aoth-9-4'],
+  ],
+  'aoth-10': [
+    ['aoth-10-3', 'aoth-10-4'],
+  ],
+};
+
 function buildSectionButtonGroup(sections: Section[]): SectionButtonGroup {
   const first = sections[0];
   const last = sections[sections.length - 1];
@@ -103,7 +154,12 @@ function getGreekOrdinal(index: number): string {
 }
 
 function getSingleTopicSectionGroups(subjectId: string, chapter: Chapter): SectionButtonGroup[] {
-  const configuredGroups = subjectId === 'math' ? MATH_SINGLE_TOPIC_SECTION_GROUPS[chapter.id] : undefined;
+  const configuredGroups =
+    subjectId === 'math'
+      ? MATH_SINGLE_TOPIC_SECTION_GROUPS[chapter.id]
+      : subjectId === 'aoth'
+        ? AOTH_SINGLE_TOPIC_SECTION_GROUPS[chapter.id]
+        : undefined;
 
   if (!configuredGroups) {
     return chapter.sections.map((section) => buildSectionButtonGroup([section]));
