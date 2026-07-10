@@ -140,12 +140,49 @@ const aothTopicD: SingleTopicPdfItem[] = Array.from({ length: 50 }, (_, index) =
   };
 });
 
+const MATH_OEFE_G_EXERCISE_COUNTS: Record<string, number> = {
+  'math-1-1__math-1-2': 12,
+  'math-1-3': 6,
+  'math-1-4__math-1-5__math-1-6__math-1-7': 24,
+  'math-1-8': 6,
+  'math-2-1__math-2-2': 12,
+  'math-2-3': 6,
+  'math-2-4': 6,
+  'math-2-5__math-2-6': 12,
+  'math-2-7__math-2-8__math-2-9__math-2-10': 24,
+  'math-3-1': 6,
+  'math-3-4': 6,
+  'math-3-5': 6,
+  'math-3-7': 6,
+};
+
+function buildMathOefeExercises(groupKey: string, count: number): SingleTopicPdfItem[] {
+  return Array.from({ length: count }, (_, index) => {
+    const order = index + 1;
+    const suffix = pad(order);
+
+    return {
+      id: `${groupKey}-exercise-${suffix}`,
+      title: `${order}η Άσκηση`,
+      pdfPath: `/single-topics/math/oefe-g/${groupKey}/exercise-${suffix}.pdf`,
+    };
+  });
+}
+
+const mathOefeGExercises = Object.fromEntries(
+  Object.entries(MATH_OEFE_G_EXERCISE_COUNTS).map(([groupKey, count]) => [
+    groupKey,
+    buildMathOefeExercises(groupKey, count),
+  ]),
+) as Record<string, SingleTopicPdfItem[]>;
+
 const SINGLE_TOPIC_LIBRARY: Record<string, Record<string, SingleTopicPdfItem[]>> = {
   math: {
     'topic-a': mathTopicA,
     'topic-b': mathTopicB,
     'topic-c': mathTopicC,
     'topic-d': mathTopicD,
+    ...mathOefeGExercises,
   },
   aepp: {
     'topic-a': aeppTopicA,

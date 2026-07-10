@@ -117,6 +117,25 @@ function getSingleTopicSectionGroups(subjectId: string, chapter: Chapter): Secti
     .map(buildSectionButtonGroup);
 }
 
+function getSectionTopicCopy(subjectId: string | undefined, topicKey: string | undefined) {
+  if (!subjectId || !topicKey) return undefined;
+
+  const subject = getSubjectById(subjectId);
+  if (!subject) return undefined;
+
+  const sectionIds = topicKey.split('__');
+  const sections = subject.chapters.flatMap((chapter) => chapter.sections).filter((section) => sectionIds.includes(section.id));
+
+  if (!sections.length) return undefined;
+
+  const sectionTitle = sections.map((section) => `${section.number} ${section.title}`).join(' / ');
+
+  return {
+    title: sectionTitle,
+    description: `Διάλεξε ποια άσκηση θέλεις να ανοίξεις για την υποενότητα ${sectionTitle}.`,
+  };
+}
+
 export default function SingleTopicsPage() {
   const navigate = useNavigate();
   const { subjectID, topicKey } = useParams();
@@ -150,7 +169,7 @@ export default function SingleTopicsPage() {
   }
 
   if (subjectID && topicKey) {
-    const topicCopy = TOPIC_DETAIL_COPY[topicKey];
+    const topicCopy = TOPIC_DETAIL_COPY[topicKey] ?? getSectionTopicCopy(subjectID, topicKey);
 
     return (
       <div className="simple-module-page subject-module-page">
@@ -170,7 +189,7 @@ export default function SingleTopicsPage() {
         </section>
 
         <section className="generator-panel subject-module-panel">
-          <h2>Διαθέσιμα PDF</h2>
+          <h2>{subjectID === 'math' ? 'Διαθέσιμες ασκήσεις' : 'Διαθέσιμα PDF'}</h2>
           {pdfItems.length === 0 ? (
             <p>Δεν έχουν προστεθεί ακόμη αρχεία για αυτό το θέμα.</p>
           ) : (
@@ -184,7 +203,7 @@ export default function SingleTopicsPage() {
                     type="button"
                   >
                     <strong>{item.title}</strong>
-                    <span>Άνοιγμα PDF</span>
+                    <span>{subjectID === 'math' ? 'Άνοιγμα άσκησης' : 'Άνοιγμα PDF'}</span>
                   </button>
                 ))}
               </div>
@@ -294,6 +313,7 @@ export default function SingleTopicsPage() {
                                 key={sectionGroup.id}
                                 className="module-b-section-item single-topic-section-item single-topic-branch-item"
                                 style={{ animationDelay: `${sectionIndex * 95}ms` }}
+                                onClick={() => navigate(`/single-topics/${selectedSubject.id}/${sectionGroup.id}`)}
                                 type="button"
                               >
                                 <span className="single-topic-branch-label">{getGreekOrdinal(sectionIndex)}</span>
