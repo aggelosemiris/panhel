@@ -50,6 +50,7 @@ export type StudentProfileStats = {
   totalCorrectAnswers: number;
   overallAccuracy: number;
   overallAccuracyPercent: number;
+  studyStreak: number;
   bySubject: StudentSubjectPerformance[];
   byChapter: StudentChapterPerformance[];
   trueFalseBySubject?: StudentSubjectPerformance[];
@@ -81,10 +82,17 @@ type LocalStore = {
     timesCorrect: number;
     lastAnsweredAt: string;
   }>;
+  studyActivity: Array<{
+    userId: string;
+    dateKey: string;
+    firstSeenAt: string;
+    lastSeenAt: string;
+  }>;
 };
 
 const defaultStore: LocalStore = {
   studentStats: [],
+  studyActivity: [],
 };
 
 function normalizeUserId(userId: string) {
@@ -114,6 +122,45 @@ function withAccuracy<T extends { timesCorrect: number; timesAnswered: number }>
   };
 }
 
+function getAthensDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Athens',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function shiftDateKey(dateKey: string, dayDelta: number) {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + dayDelta);
+
+  return date.toISOString().slice(0, 10);
+}
+
+function calculateStudyStreak(activityDays: LocalStore['studyActivity'], todayKey = getAthensDateKey()) {
+  const days = new Set(activityDays.map((item) => item.dateKey).filter(Boolean));
+  const yesterdayKey = shiftDateKey(todayKey, -1);
+
+  if (!days.has(todayKey) && !days.has(yesterdayKey)) {
+    return 0;
+  }
+
+  let streak = 0;
+  let cursor = days.has(todayKey) ? todayKey : yesterdayKey;
+
+  while (days.has(cursor)) {
+    streak += 1;
+    cursor = shiftDateKey(cursor, -1);
+  }
+
+  return streak;
+}
+
 function readLocalStore(): LocalStore {
   if (typeof window === 'undefined') {
     return defaultStore;
@@ -130,6 +177,7 @@ function readLocalStore(): LocalStore {
 
     return {
       studentStats: Array.isArray(parsed.studentStats) ? parsed.studentStats : [],
+      studyActivity: Array.isArray(parsed.studyActivity) ? parsed.studyActivity : [],
     };
   } catch {
     return defaultStore;
@@ -226,6 +274,17 @@ function buildLocalProfile(userId: string): StudentProfileStats {
   const normalizedUserId = normalizeUserId(userId);
   const store = readLocalStore();
   const stats = store.studentStats.filter((item) => item.userId === normalizedUserId);
+  const studyActivity = [
+    ...store.studyActivity.filter((item) => item.userId === normalizedUserId),
+    ...stats
+      .filter((item) => item.lastAnsweredAt)
+      .map((item) => ({
+        userId: normalizedUserId,
+        dateKey: getAthensDateKey(new Date(item.lastAnsweredAt)),
+        firstSeenAt: item.lastAnsweredAt,
+        lastSeenAt: item.lastAnsweredAt,
+      })),
+  ];
   const totalAnsweredQuestions = stats.reduce((sum, item) => sum + item.timesAnswered, 0);
   const totalCorrectAnswers = stats.reduce((sum, item) => sum + item.timesCorrect, 0);
   const overallAccuracy = computeAccuracy(totalCorrectAnswers, totalAnsweredQuestions);
@@ -238,6 +297,7 @@ function buildLocalProfile(userId: string): StudentProfileStats {
     totalCorrectAnswers,
     overallAccuracy,
     overallAccuracyPercent: Number((overallAccuracy * 100).toFixed(2)),
+    studyStreak: calculateStudyStreak(studyActivity),
     bySubject,
     byChapter,
     trueFalseBySubject: [],
@@ -246,6 +306,36 @@ function buildLocalProfile(userId: string): StudentProfileStats {
     strongestChapter: byChapter.length ? byChapter[byChapter.length - 1] : null,
     examDifficultyBySubject: [],
   };
+}
+
+function touchLocalStudyActivity(userId: string) {
+  const normalizedUserId = normalizeUserId(userId);
+  const store = readLocalStore();
+  touchStudyActivityInStore(store, normalizedUserId);
+  writeLocalStore(store);
+
+  return {
+    userId: normalizedUserId,
+    studyStreak: calculateStudyStreak(store.studyActivity.filter((item) => item.userId === normalizedUserId)),
+  };
+}
+
+function touchStudyActivityInStore(store: LocalStore, userId: string) {
+  const normalizedUserId = normalizeUserId(userId);
+  const now = new Date().toISOString();
+  const dateKey = getAthensDateKey(new Date(now));
+  const existing = store.studyActivity.find((item) => item.userId === normalizedUserId && item.dateKey === dateKey);
+
+  if (existing) {
+    existing.lastSeenAt = now;
+  } else {
+    store.studyActivity.push({
+      userId: normalizedUserId,
+      dateKey,
+      firstSeenAt: now,
+      lastSeenAt: now,
+    });
+  }
 }
 
 function updateLocalStudentStats({
@@ -288,6 +378,7 @@ function updateLocalStudentStats({
     stat.timesCorrect += 1;
   }
   stat.lastAnsweredAt = now;
+  touchStudyActivityInStore(store, normalizedUserId);
 
   writeLocalStore(store);
   return withAccuracy(stat);
@@ -331,5 +422,18 @@ export async function getStudentProfileStats(userId: string) {
     return data.profile;
   } catch {
     return buildLocalProfile(userId);
+  }
+}
+
+export async function touchStudyActivity(userId: string) {
+  try {
+    const data = await requestJson<{ success: boolean; activity: { userId: string; studyStreak: number } }>('/users/study-activity', {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    });
+
+    return data.activity;
+  } catch {
+    return touchLocalStudyActivity(userId);
   }
 }

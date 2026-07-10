@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.tsx';
 import { DEFAULT_QUIZ_USER_ID } from '../context/QuizContext.tsx';
-import { getStudentProfileStats, type StudentProfileStats } from '../services/studentStats.ts';
+import { getStudentProfileStats, touchStudyActivity, type StudentProfileStats } from '../services/studentStats.ts';
 import { LuBookOpen, LuBot, LuFileText, LuGraduationCap, LuHistory, LuSettings, LuSparkles, LuTrophy } from 'react-icons/lu';
 
 const planCards = [
@@ -104,7 +104,13 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<StudentProfileStats | null>(null);
 
   useEffect(() => {
-    getStudentProfileStats(currentUser?.id ?? DEFAULT_QUIZ_USER_ID).then(setProfile).catch(() => setProfile(null));
+    const userId = currentUser?.id ?? DEFAULT_QUIZ_USER_ID;
+
+    touchStudyActivity(userId)
+      .catch(() => null)
+      .finally(() => {
+        getStudentProfileStats(userId).then(setProfile).catch(() => setProfile(null));
+      });
   }, [currentUser?.id]);
 
   const dailyTip = useMemo(() => {
@@ -128,7 +134,7 @@ export default function Dashboard() {
       },
       {
         label: 'Study Streak',
-        value: '12 ημέρες',
+        value: `${profile?.studyStreak ?? 0} ημέρες`,
       },
     ],
     [profile],

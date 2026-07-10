@@ -8,6 +8,7 @@ const router = express.Router();
 const {
   getStudentProfile,
   getStudentWeakChapters,
+  touchStudyActivity,
   updateStudentStats,
 } = require('../services/student-stats.service');
 const {
@@ -52,6 +53,20 @@ router.post('/student-stats', async (req, res, next) => {
     res.json({
       success: true,
       stat,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/study-activity', async (req, res, next) => {
+  try {
+    const userId = resolveUserId(req);
+    const activity = await touchStudyActivity(userId);
+
+    res.json({
+      success: true,
+      activity,
     });
   } catch (error) {
     next(error);

@@ -6,6 +6,7 @@ const DATA_DIRECTORY = path.join(__dirname, '..', 'data');
 const STUDENT_STATS_FILE = path.join(DATA_DIRECTORY, 'student-stats.json');
 const DEFAULT_STORE = {
   studentStats: [],
+  studyActivity: [],
 };
 
 let pendingWrite = Promise.resolve();
@@ -50,6 +51,46 @@ function withAccuracyMetrics(item) {
   };
 }
 
+function getAthensDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Athens',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function shiftDateKey(dateKey, dayDelta) {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + dayDelta);
+
+  return date.toISOString().slice(0, 10);
+}
+
+function calculateStudyStreak(activityDays, todayKey = getAthensDateKey()) {
+  const days = new Set((activityDays ?? []).map((item) => item.dateKey).filter(Boolean));
+  const yesterdayKey = shiftDateKey(todayKey, -1);
+
+  if (!days.has(todayKey) && !days.has(yesterdayKey)) {
+    return 0;
+  }
+
+  let streak = 0;
+  let cursor = days.has(todayKey) ? todayKey : yesterdayKey;
+
+  while (days.has(cursor)) {
+    streak += 1;
+    cursor = shiftDateKey(cursor, -1);
+  }
+
+  return streak;
+}
+
 async function ensureStore() {
   await fs.mkdir(DATA_DIRECTORY, { recursive: true });
 
@@ -69,6 +110,7 @@ async function readStore() {
 
     return {
       studentStats: Array.isArray(parsed.studentStats) ? parsed.studentStats : [],
+      studyActivity: Array.isArray(parsed.studyActivity) ? parsed.studyActivity : [],
     };
   } catch {
     return { ...DEFAULT_STORE };
@@ -210,10 +252,43 @@ async function updateStudentStats({ userId, subject, chapterId, questionId, isCo
   }
   stat.questionType = normalizedQuestionType;
   stat.lastAnsweredAt = now;
+  touchStudyActivityInStore(store, normalizedUserId, now);
 
   await writeStore(store);
 
   return withAccuracyMetrics(stat);
+}
+
+function touchStudyActivityInStore(store, userId, isoTimestamp = new Date().toISOString()) {
+  const normalizedUserId = normalizeUserId(userId);
+  const dateKey = getAthensDateKey(new Date(isoTimestamp));
+  const activity = Array.isArray(store.studyActivity) ? store.studyActivity : [];
+  const existing = activity.find((item) => item.userId === normalizedUserId && item.dateKey === dateKey);
+
+  if (existing) {
+    existing.lastSeenAt = isoTimestamp;
+  } else {
+    activity.push({
+      userId: normalizedUserId,
+      dateKey,
+      firstSeenAt: isoTimestamp,
+      lastSeenAt: isoTimestamp,
+    });
+  }
+
+  store.studyActivity = activity;
+}
+
+async function touchStudyActivity(userId) {
+  const normalizedUserId = normalizeUserId(userId);
+  const store = await readStore();
+  touchStudyActivityInStore(store, normalizedUserId);
+  await writeStore(store);
+
+  return {
+    userId: normalizedUserId,
+    studyStreak: calculateStudyStreak(store.studyActivity.filter((item) => item.userId === normalizedUserId)),
+  };
 }
 
 async function getStudentWeakChapters(userId, subject) {
@@ -232,6 +307,15 @@ async function getStudentProfile(userId) {
   const normalizedUserId = normalizeUserId(userId);
   const store = await readStore();
   const studentStats = store.studentStats.filter((item) => item.userId === normalizedUserId);
+  const studyActivity = [
+    ...(store.studyActivity ?? []).filter((item) => item.userId === normalizedUserId),
+    ...studentStats
+      .filter((item) => item.lastAnsweredAt)
+      .map((item) => ({
+        userId: normalizedUserId,
+        dateKey: getAthensDateKey(new Date(item.lastAnsweredAt)),
+      })),
+  ];
 
   const totalAnsweredQuestions = studentStats.reduce((sum, item) => sum + item.timesAnswered, 0);
   const totalCorrectAnswers = studentStats.reduce((sum, item) => sum + item.timesCorrect, 0);
@@ -249,6 +333,7 @@ async function getStudentProfile(userId) {
     bySubject,
     byChapter,
     trueFalseBySubject,
+    studyStreak: calculateStudyStreak(studyActivity),
     weakestChapter: byChapter[0] ?? null,
     strongestChapter: byChapter.length ? byChapter[byChapter.length - 1] : null,
   };
@@ -257,5 +342,6 @@ async function getStudentProfile(userId) {
 module.exports = {
   getStudentProfile,
   getStudentWeakChapters,
+  touchStudyActivity,
   updateStudentStats,
 };

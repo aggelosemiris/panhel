@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getStudentProfileStats } from '../services/studentStats.ts';
+import { getStudentProfileStats, touchStudyActivity } from '../services/studentStats.ts';
 import { DEFAULT_QUIZ_USER_ID } from '../context/QuizContext.tsx';
 import '../styles/StudentPlanBoard.css';
 import { LuTrophy } from 'react-icons/lu';
@@ -30,6 +30,7 @@ const StudentPlanBoard: React.FC = () => {
     const fetchStats = async () => {
       try {
         const userId = DEFAULT_QUIZ_USER_ID;
+        await touchStudyActivity(userId).catch(() => null);
         const profileStats = await getStudentProfileStats(userId);
         
         if (profileStats) {
@@ -44,7 +45,7 @@ const StudentPlanBoard: React.FC = () => {
 
           setStats({
             totalAnswered: profileStats.totalAnswered || 0,
-            studyStreak: profileStats.studyStreak || 12,
+            studyStreak: profileStats.studyStreak || 0,
             completionRate: Math.round(profileStats.overallAccuracyPercent || 100),
             bySubject: subjectProgress,
           });
