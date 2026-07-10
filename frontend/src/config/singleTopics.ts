@@ -140,39 +140,36 @@ const aothTopicD: SingleTopicPdfItem[] = Array.from({ length: 50 }, (_, index) =
   };
 });
 
-const MATH_OEFE_G_EXERCISE_COUNTS: Record<string, number> = {
-  'math-1-1__math-1-2': 12,
-  'math-1-3': 6,
-  'math-1-4__math-1-5__math-1-6__math-1-7': 24,
-  'math-1-8': 6,
-  'math-2-1__math-2-2': 12,
-  'math-2-3': 6,
-  'math-2-4': 6,
-  'math-2-5__math-2-6': 12,
-  'math-2-7__math-2-8__math-2-9__math-2-10': 24,
-  'math-3-1': 6,
-  'math-3-4': 6,
-  'math-3-5': 6,
-  'math-3-7': 6,
+const MATH_CORRECT_WRITING_PACKS: Record<string, string> = {
+  'math-1-1__math-1-2': 'Συνδυαστικές ασκήσεις: Πραγματικοί αριθμοί - Συναρτήσεις',
+  'math-1-3': 'Συνδυαστικές ασκήσεις: Μονοτονία - Αντίστροφη',
+  'math-1-4__math-1-5__math-1-6__math-1-7': 'Συνδυαστικές ασκήσεις: Όρια και συνέχεια',
+  'math-1-8': 'Συνδυαστικές ασκήσεις: Σύνοψη 1ου κεφαλαίου',
+  'math-2-1__math-2-2': 'Συνδυαστικές ασκήσεις: Παράγωγος - Εφαπτομένη',
+  'math-2-3': 'Συνδυαστικές ασκήσεις: Κανόνες παραγώγισης',
+  'math-2-4': 'Συνδυαστικές ασκήσεις: Ρυθμός μεταβολής',
+  'math-2-5__math-2-6': 'Συνδυαστικές ασκήσεις: Θεώρημα μέσης τιμής',
+  'math-2-7__math-2-8__math-2-9__math-2-10': 'Συνδυαστικές ασκήσεις: Μελέτη συνάρτησης',
+  'math-3-1': 'Συνδυαστικές ασκήσεις: Αόριστο ολοκλήρωμα',
+  'math-3-4': 'Συνδυαστικές ασκήσεις: Ορισμένο ολοκλήρωμα',
+  'math-3-5': 'Συνδυαστικές ασκήσεις: Συνάρτηση ολοκληρώματος',
+  'math-3-7': 'Συνδυαστικές ασκήσεις: Εμβαδόν',
 };
 
-function buildMathOefeExercises(groupKey: string, count: number): SingleTopicPdfItem[] {
-  return Array.from({ length: count }, (_, index) => {
-    const order = index + 1;
-    const suffix = pad(order);
-
-    return {
-      id: `${groupKey}-exercise-${suffix}`,
-      title: `${order}η Άσκηση`,
-      pdfPath: `/single-topics/math/oefe-g/${groupKey}/exercise-${suffix}.pdf`,
-    };
-  });
+function buildMathCorrectWritingPack(groupKey: string, title: string): SingleTopicPdfItem[] {
+  return [
+    {
+      id: `${groupKey}-correct-writing`,
+      title,
+      pdfPath: `/single-topics/math/correct-writing/${groupKey}/correct-writing-exercises.pdf`,
+    },
+  ];
 }
 
-const mathOefeGExercises = Object.fromEntries(
-  Object.entries(MATH_OEFE_G_EXERCISE_COUNTS).map(([groupKey, count]) => [
+const mathCorrectWritingExercises = Object.fromEntries(
+  Object.entries(MATH_CORRECT_WRITING_PACKS).map(([groupKey, title]) => [
     groupKey,
-    buildMathOefeExercises(groupKey, count),
+    buildMathCorrectWritingPack(groupKey, title),
   ]),
 ) as Record<string, SingleTopicPdfItem[]>;
 
@@ -182,7 +179,7 @@ const SINGLE_TOPIC_LIBRARY: Record<string, Record<string, SingleTopicPdfItem[]>>
     'topic-b': mathTopicB,
     'topic-c': mathTopicC,
     'topic-d': mathTopicD,
-    ...mathOefeGExercises,
+    ...mathCorrectWritingExercises,
   },
   aepp: {
     'topic-a': aeppTopicA,
