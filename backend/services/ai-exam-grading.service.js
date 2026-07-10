@@ -85,6 +85,25 @@ function buildFallbackGradeResult({
     summary:
       fallbackReason ||
       'Fallback grading ενεργοποιήθηκε επειδή η AI διόρθωση δεν ήταν διαθέσιμη αυτή τη στιγμή. Το αποτέλεσμα είναι ενδεικτικό μέχρι να ενεργοποιηθεί πραγματική AI διόρθωση.',
+    praise_points: [
+      'Η προσπάθειά σου καταγράφηκε και μπορεί να χρησιμοποιηθεί για επανάληψη.',
+      'Συνέχισε να γράφεις αναλυτικά βήματα, γιατί αυτό βοηθά πολύ στη βαθμολόγηση.',
+    ],
+    mistakes_found: [
+      {
+        description: 'Η πραγματική AI ανάλυση δεν ήταν διαθέσιμη, άρα δεν εντοπίστηκαν συγκεκριμένα λάθη.',
+        explanation: 'Το προσωρινό αποτέλεσμα είναι μόνο ενδεικτικό και δεν αντικαθιστά αναλυτική διόρθωση καθηγητή.',
+        hintToFix: 'Ξαναδοκίμασε σε λίγο ώστε να πάρεις πλήρη διόρθωση με σχόλια ανά βήμα.',
+      },
+    ],
+    pedagogical_guidance:
+      'Μέχρι να επανέλθει η AI διόρθωση, σύγκρινε τη λύση σου με τη μεθοδολογία του κεφαλαίου και έλεγξε αν έχεις αιτιολογήσει κάθε βήμα.',
+    complete_solution:
+      'Η υποδειγματική λύση θα εμφανιστεί όταν ενεργοποιηθεί ξανά η πραγματική AI διόρθωση.',
+    next_steps: [
+      'Έλεγξε αν έχεις γράψει δεδομένα, ζητούμενα και τύπους.',
+      'Ξαναστείλε το γραπτό όταν η AI σύνδεση είναι διαθέσιμη.',
+    ],
     gradingMode: 'fallback',
   };
 }
@@ -101,12 +120,17 @@ function buildGradingPrompt({ subjectId, chapterId, chapterTitle, difficulty, mo
     `Chapter title: ${chapterTitle}`,
     `Difficulty label: ${DIFFICULTY_LABELS[difficulty] ?? difficulty}`,
     mode === 'single-topic'
-      ? `Topic key: ${topicKey || 'single-topic'}`
+      ? `Topic key: ${topicKey || 'single-topic'}. If an official exercise PDF is attached first, compare it with the student answer sheets that follow.`
       : 'The first attached PDF is the official exam sheet. The following attachments are the student answer sheets.',
-    'Grade strictly and conservatively.',
-    'Keep max_total_score at 100 when possible.',
+    'You are not just a scorer. You are a Greek Panhellenic tutor correcting a student answer pedagogically.',
+    'Grade strictly and conservatively, but write feedback warmly and clearly.',
+    'Start by praising what the student did correctly.',
+    'Find mistakes precisely. For each mistake explain why it is wrong and give a Socratic hint that helps the student fix it alone.',
+    'Give a complete model solution only after the feedback, so the student can study it if stuck.',
+    'Use Greek school terminology for AOTH, AEPP and Math.',
+    'Keep max_total_score at 100 when possible. For a single-topic answer, use one question with max_score 100.',
     'If the exam has multiple questions, return one item per question.',
-    'Every returned question must include: question_id, chapter_id, chapter, score, max_score.',
+    'Every returned question must include: question_id, chapter_id, chapter, score, max_score, feedback, hint.',
     'Use the provided canonical chapter_id unless the exam clearly mixes chapters.',
     'Use this JSON schema exactly:',
     JSON.stringify(
@@ -119,11 +143,25 @@ function buildGradingPrompt({ subjectId, chapterId, chapterTitle, difficulty, mo
             chapter: 'string',
             score: 0,
             max_score: 0,
+            feedback: 'string',
+            hint: 'string',
           },
         ],
         total_score: 0,
         max_total_score: 100,
         summary: 'string',
+        praise_points: ['string'],
+        mistakes_found: [
+          {
+            description: 'string',
+            stepNumber: 1,
+            explanation: 'string',
+            hintToFix: 'string',
+          },
+        ],
+        pedagogical_guidance: 'string',
+        complete_solution: 'string',
+        next_steps: ['string'],
       },
       null,
       2,
@@ -169,6 +207,8 @@ function normalizeAiResult(result, { subjectId, chapterId, chapterTitle, provide
     chapter: String(question.chapter ?? chapterTitle),
     score: Number(question.score ?? 0),
     max_score: Number(question.max_score ?? 0),
+    feedback: String(question.feedback ?? ''),
+    hint: String(question.hint ?? ''),
   }));
 
   const totalScore =
@@ -184,6 +224,35 @@ function normalizeAiResult(result, { subjectId, chapterId, chapterTitle, provide
     total_score: Number(totalScore.toFixed(2)),
     max_total_score: Number(maxTotalScore.toFixed(2)),
     summary: typeof result.summary === 'string' ? result.summary : 'Η AI διόρθωση ολοκληρώθηκε.',
+    praise_points: Array.isArray(result.praise_points)
+      ? result.praise_points.map((item) => String(item)).filter(Boolean)
+      : [],
+    mistakes_found: Array.isArray(result.mistakes_found)
+      ? result.mistakes_found.map((mistake, index) => ({
+          description: String(mistake?.description ?? `Σημείο ${index + 1}`),
+          stepNumber:
+            typeof mistake?.stepNumber === 'number' && Number.isFinite(mistake.stepNumber)
+              ? mistake.stepNumber
+              : undefined,
+          explanation: String(mistake?.explanation ?? ''),
+          hintToFix: String(mistake?.hintToFix ?? mistake?.hint ?? ''),
+        }))
+      : [],
+    pedagogical_guidance:
+      typeof result.pedagogical_guidance === 'string'
+        ? result.pedagogical_guidance
+        : typeof result.pedagogicalGuidance === 'string'
+          ? result.pedagogicalGuidance
+          : '',
+    complete_solution:
+      typeof result.complete_solution === 'string'
+        ? result.complete_solution
+        : typeof result.completeSolution === 'string'
+          ? result.completeSolution
+          : '',
+    next_steps: Array.isArray(result.next_steps)
+      ? result.next_steps.map((item) => String(item)).filter(Boolean)
+      : [],
     gradingMode: provider,
   };
 }
@@ -266,15 +335,52 @@ async function callOpenAiExamGrader({
                     chapter: { type: 'string' },
                     score: { type: 'number' },
                     max_score: { type: 'number' },
+                    feedback: { type: 'string' },
+                    hint: { type: 'string' },
                   },
-                  required: ['question_id', 'chapter_id', 'chapter', 'score', 'max_score'],
+                  required: ['question_id', 'chapter_id', 'chapter', 'score', 'max_score', 'feedback', 'hint'],
                 },
               },
               total_score: { type: 'number' },
               max_total_score: { type: 'number' },
               summary: { type: 'string' },
+              praise_points: {
+                type: 'array',
+                items: { type: 'string' },
+              },
+              mistakes_found: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  additionalProperties: false,
+                  properties: {
+                    description: { type: 'string' },
+                    stepNumber: { type: 'number' },
+                    explanation: { type: 'string' },
+                    hintToFix: { type: 'string' },
+                  },
+                  required: ['description', 'stepNumber', 'explanation', 'hintToFix'],
+                },
+              },
+              pedagogical_guidance: { type: 'string' },
+              complete_solution: { type: 'string' },
+              next_steps: {
+                type: 'array',
+                items: { type: 'string' },
+              },
             },
-            required: ['subject', 'questions', 'total_score', 'max_total_score', 'summary'],
+            required: [
+              'subject',
+              'questions',
+              'total_score',
+              'max_total_score',
+              'summary',
+              'praise_points',
+              'mistakes_found',
+              'pedagogical_guidance',
+              'complete_solution',
+              'next_steps',
+            ],
           },
         },
       },
@@ -373,13 +479,13 @@ async function gradeExamSubmission(args) {
   });
 }
 
-async function gradeSingleTopicSubmission({ subjectId, topicKey, uploadedFiles }) {
+async function gradeSingleTopicSubmission({ subjectId, topicKey, uploadedFiles, exercisePdfPath }) {
   return gradeExamSubmission({
     subjectId,
     chapterId: topicKey,
     chapterTitle: `Θέμα ${String(topicKey || '').replace('topic-', '').toUpperCase()}`,
     difficulty: 'normal',
-    examPdfPath: null,
+    examPdfPath: exercisePdfPath || null,
     uploadedFiles,
     mode: 'single-topic',
     topicKey,

@@ -163,7 +163,7 @@ router.post('/single-topic/:subjectID/:topicKey/grade-submission', async (req, r
   try {
     const userId = resolveUserId(req);
     const { subjectID, topicKey } = req.params;
-    const { uploadedFiles = [] } = req.body;
+    const { uploadedFiles = [], exercisePdfPath } = req.body;
 
     const uploadError = validateUploadedFiles(uploadedFiles);
     if (uploadError) {
@@ -177,6 +177,7 @@ router.post('/single-topic/:subjectID/:topicKey/grade-submission', async (req, r
       subjectId: subjectID,
       topicKey,
       uploadedFiles,
+      exercisePdfPath,
     });
 
     for (const question of grading.questions) {

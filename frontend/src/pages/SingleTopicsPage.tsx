@@ -380,7 +380,11 @@ export default function SingleTopicsPage() {
           )}
         </section>
 
-        <SingleTopicCorrectionPanel subjectId={subjectID} topicKey={topicKey} />
+        <SingleTopicCorrectionPanel
+          exercisePdfPath={selectedPdfPath}
+          subjectId={subjectID}
+          topicKey={topicKey}
+        />
       </div>
     );
   }

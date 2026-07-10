@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { fileToUploadPayload, submitSingleTopicForAiCorrection, type ExamGradingResult, type UploadedExamFile } from '../services/examGrading.ts';
+import AiCorrectionResult from './AiCorrectionResult.tsx';
 
 const TOPIC_LABELS: Record<string, string> = {
   'topic-a': 'Θέμα Α',
@@ -12,9 +13,11 @@ const TOPIC_LABELS: Record<string, string> = {
 export default function SingleTopicCorrectionPanel({
   subjectId,
   topicKey,
+  exercisePdfPath,
 }: {
   subjectId: string;
   topicKey: string;
+  exercisePdfPath?: string | null;
 }) {
   const { currentUser } = useAuth();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -44,6 +47,7 @@ export default function SingleTopicCorrectionPanel({
         subjectId,
         topicKey,
         uploadedFiles,
+        exercisePdfPath,
         userId: currentUser?.id,
       });
 
@@ -76,31 +80,7 @@ export default function SingleTopicCorrectionPanel({
       {acceptedFormatsLabel ? <p className="exam-upload-selected">{acceptedFormatsLabel}</p> : null}
       {errorMessage ? <p className="exam-correction-error">{errorMessage}</p> : null}
 
-      {gradingResult ? (
-        <div className="exam-correction-result">
-          <div className="exam-correction-summary">
-            <strong>{`Σκορ: ${gradingResult.total_score}/${gradingResult.max_total_score}`}</strong>
-            <span>
-              {gradingResult.gradingMode === 'fallback'
-                ? 'Fallback grading ενεργοποιήθηκε επειδή η AI διόρθωση δεν ήταν διαθέσιμη αυτή τη στιγμή. Το αποτέλεσμα είναι ενδεικτικό μέχρι να ενεργοποιηθεί πραγματική AI διόρθωση.'
-                : gradingResult.summary}
-            </span>
-          </div>
-
-          <div className="exam-correction-breakdown">
-            {gradingResult.questions.map((question) => (
-              <article key={question.question_id} className="exam-correction-breakdown-card">
-                <strong>{question.chapter}</strong>
-                <span>{`Μονάδες: ${question.score}/${question.max_score}`}</span>
-              </article>
-            ))}
-          </div>
-
-          {gradingResult.gradingMode === 'fallback' ? (
-            <p className="exam-correction-note">Το αποτέλεσμα είναι προσωρινή fallback εκτίμηση μέχρι να επανέλθει η πραγματική AI διόρθωση.</p>
-          ) : null}
-        </div>
-      ) : null}
+      {gradingResult ? <AiCorrectionResult result={gradingResult} /> : null}
     </section>
   );
 }

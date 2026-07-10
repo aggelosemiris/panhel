@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { fileToUploadPayload, submitExamForAiCorrection, type ExamGradingResult, type UploadedExamFile } from '../services/examGrading.ts';
+import AiCorrectionResult from './AiCorrectionResult.tsx';
 
 export default function ExamCorrectionPanel({
   subjectId,
@@ -76,32 +77,7 @@ export default function ExamCorrectionPanel({
       {acceptedFormatsLabel ? <p className="exam-upload-selected">{acceptedFormatsLabel}</p> : null}
       {errorMessage ? <p className="exam-correction-error">{errorMessage}</p> : null}
 
-      {gradingResult ? (
-        <div className="exam-correction-result">
-          <div className="exam-correction-summary">
-            <strong>{`Σκορ: ${gradingResult.total_score}/${gradingResult.max_total_score}`}</strong>
-            <span>
-              {gradingResult.gradingMode === 'fallback'
-                ? 'Fallback grading ενεργοποιήθηκε επειδή η AI διόρθωση δεν ήταν διαθέσιμη αυτή τη στιγμή. Το αποτέλεσμα είναι ενδεικτικό μέχρι να ενεργοποιηθεί πραγματική AI διόρθωση.'
-                : gradingResult.summary}
-            </span>
-          </div>
-
-          <div className="exam-correction-breakdown">
-            {gradingResult.questions.map((question) => (
-              <article key={question.question_id} className="exam-correction-breakdown-card">
-                <strong>{question.chapter}</strong>
-                <span>{`Ερώτηση ${question.question_id}`}</span>
-                <span>{`${question.score}/${question.max_score}`}</span>
-              </article>
-            ))}
-          </div>
-
-          {gradingResult.gradingMode === 'fallback' ? (
-            <p className="exam-correction-note">Το αποτέλεσμα είναι προσωρινή fallback εκτίμηση μέχρι να επανέλθει η πραγματική AI διόρθωση.</p>
-          ) : null}
-        </div>
-      ) : null}
+      {gradingResult ? <AiCorrectionResult result={gradingResult} /> : null}
     </section>
   );
 }

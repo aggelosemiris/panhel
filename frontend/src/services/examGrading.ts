@@ -15,6 +15,15 @@ export type ExamGradingQuestion = {
   chapter: string;
   score: number;
   max_score: number;
+  feedback?: string;
+  hint?: string;
+};
+
+export type ExamGradingMistake = {
+  description: string;
+  stepNumber?: number;
+  explanation: string;
+  hintToFix: string;
 };
 
 export type ExamGradingResult = {
@@ -26,6 +35,11 @@ export type ExamGradingResult = {
   total_score: number;
   max_total_score: number;
   summary: string;
+  praise_points?: string[];
+  mistakes_found?: ExamGradingMistake[];
+  pedagogical_guidance?: string;
+  complete_solution?: string;
+  next_steps?: string[];
   gradingMode: string;
 };
 
@@ -103,11 +117,13 @@ export async function submitSingleTopicForAiCorrection({
   subjectId,
   topicKey,
   uploadedFiles,
+  exercisePdfPath,
   userId = DEFAULT_QUIZ_USER_ID,
 }: {
   subjectId: string;
   topicKey: string;
   uploadedFiles: UploadedExamFile[];
+  exercisePdfPath?: string | null;
   userId?: string;
 }) {
   const response = await fetch(`${API_BASE_URL}/tests/chapter/single-topic/${subjectId}/${topicKey}/grade-submission`, {
@@ -118,6 +134,7 @@ export async function submitSingleTopicForAiCorrection({
     body: JSON.stringify({
       userId,
       uploadedFiles,
+      exercisePdfPath,
     }),
   });
 
