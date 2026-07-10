@@ -69,7 +69,13 @@ type SectionButtonGroup = {
   sections: Section[];
 };
 
-const MATH_SINGLE_TOPIC_SECTION_GROUPS: Record<string, string[][]> = {
+type SectionGroupConfig = string[] | {
+  ids: string[];
+  number?: string;
+  title: string;
+};
+
+const MATH_SINGLE_TOPIC_SECTION_GROUPS: Record<string, SectionGroupConfig[]> = {
   'math-1': [
     ['math-1-1', 'math-1-2'],
     ['math-1-3'],
@@ -85,7 +91,7 @@ const MATH_SINGLE_TOPIC_SECTION_GROUPS: Record<string, string[][]> = {
   ],
 };
 
-const AOTH_SINGLE_TOPIC_SECTION_GROUPS: Record<string, string[][]> = {
+const AOTH_SINGLE_TOPIC_SECTION_GROUPS: Record<string, SectionGroupConfig[]> = {
   'aoth-1': [
     ['aoth-1-1', 'aoth-1-2'],
     ['aoth-1-3', 'aoth-1-4'],
@@ -136,40 +142,95 @@ const AOTH_SINGLE_TOPIC_SECTION_GROUPS: Record<string, string[][]> = {
   ],
 };
 
-const AEPP_SINGLE_TOPIC_SECTION_GROUPS: Record<string, string[][]> = {
+const AEPP_SINGLE_TOPIC_SECTION_GROUPS: Record<string, SectionGroupConfig[]> = {
+  'aepp-1': [
+    { ids: ['aepp-1-1', 'aepp-1-2', 'aepp-1-3'], title: 'Έννοια, κατανόηση και δομή προβλήματος' },
+    { ids: ['aepp-1-4'], title: 'Καθορισμός απαιτήσεων και ανάλυση δεδομένων' },
+  ],
+  'aepp-2': [
+    { ids: ['aepp-2-1', 'aepp-2-2', 'aepp-2-3'], title: 'Έννοια, χαρακτηριστικά και αναπαράσταση αλγορίθμου' },
+    { ids: ['aepp-2-4', 'aepp-2-4-1'], title: 'Δομή ακολουθίας και βασικές εντολές' },
+    { ids: ['aepp-2-4-2', 'aepp-2-4-3'], title: 'Απλή, σύνθετη και πολλαπλή επιλογή' },
+    { ids: ['aepp-2-4-4'], title: 'Εμφωλευμένες επιλογές' },
+    { ids: ['aepp-2-4-5'], title: 'Δομές επανάληψης' },
+  ],
+  'aepp-3': [
+    { ids: ['aepp-3-1', 'aepp-3-2'], title: 'Δεδομένα, αλγόριθμοι και δομές δεδομένων' },
+    { ids: ['aepp-3-3'], title: 'Πίνακες και βασική επεξεργασία' },
+    { ids: ['aepp-3-4'], title: 'Στοίβα' },
+    { ids: ['aepp-3-5'], title: 'Ουρά' },
+    { ids: ['aepp-3-6'], title: 'Αναζήτηση σε πίνακες' },
+    { ids: ['aepp-3-7'], title: 'Ταξινόμηση και παράλληλοι πίνακες' },
+  ],
+  'aepp-4': [
+    { ids: ['aepp-4-1'], title: 'Ανάλυση και διάσπαση προβλήματος' },
+  ],
+  'aepp-6': [
+    { ids: ['aepp-6-1', 'aepp-6-3', 'aepp-6-7'], title: 'Πρόγραμμα, γλώσσες και προγραμματιστικά περιβάλλοντα' },
+    { ids: ['aepp-6-4', 'aepp-6-4-1', 'aepp-6-4-2', 'aepp-6-4-3'], title: 'Τεχνικές και μοντέλα προγραμματισμού' },
+    { ids: ['aepp-6-5'], title: 'Αντικειμενοστραφής προγραμματισμός' },
+  ],
+  'aepp-7': [
+    { ids: ['aepp-7-1', 'aepp-7-2', 'aepp-7-3', 'aepp-7-4'], title: 'Αλφάβητο, τύποι δεδομένων, σταθερές και μεταβλητές' },
+    { ids: ['aepp-7-5', 'aepp-7-6', 'aepp-7-7'], title: 'Τελεστές, συναρτήσεις και αριθμητικές εκφράσεις' },
+    { ids: ['aepp-7-8', 'aepp-7-9'], title: 'Εκχώρηση και εντολές εισόδου και εξόδου' },
+    { ids: ['aepp-7-10'], title: 'Δομή ολοκληρωμένου προγράμματος' },
+  ],
+  'aepp-8': [
+    { ids: ['aepp-8-1', 'aepp-8-1-1'], title: 'Απλή και σύνθετη εντολή ΑΝ' },
+    { ids: ['aepp-8-1-2'], title: 'Εντολή ΕΠΙΛΕΞΕ και πολλαπλή επιλογή' },
+    { ids: ['aepp-8-2', 'aepp-8-2-1'], title: 'Επανάληψη με ΟΣΟ' },
+    { ids: ['aepp-8-2-2'], title: 'Επανάληψη με ΑΡΧΗ ΕΠΑΝΑΛΗΨΗΣ και ΜΕΧΡΙΣ ΟΤΟΥ' },
+    { ids: ['aepp-8-2-3'], title: 'Επανάληψη με ΓΙΑ' },
+    { ids: ['aepp-8-2', 'aepp-8-2-1', 'aepp-8-2-2', 'aepp-8-2-3'], title: 'Μετατροπές, εμφωλεύσεις και συνδυασμός επαναλήψεων' },
+  ],
+  'aepp-9': [
+    { ids: ['aepp-9-1', 'aepp-9-2'], title: 'Μονοδιάστατοι πίνακες και βασικές επεξεργασίες' },
+    { ids: ['aepp-9-1', 'aepp-9-2'], title: 'Αναζήτηση, πλήθος και θέσεις στοιχείων' },
+    { ids: ['aepp-9-4'], title: 'Ταξινόμηση και παράλληλοι πίνακες' },
+    { ids: ['aepp-9-3'], title: 'Δισδιάστατοι πίνακες' },
+    { ids: ['aepp-9-4'], title: 'Τυπικές και συνδυαστικές επεξεργασίες πινάκων' },
+  ],
+  'aepp-10': [
+    { ids: ['aepp-10-1', 'aepp-10-2', 'aepp-10-3'], title: 'Τμηματικός προγραμματισμός, χαρακτηριστικά και πλεονεκτήματα' },
+    { ids: ['aepp-10-4', 'aepp-10-5-3'], title: 'Παράμετροι και μεταφορά τιμών' },
+    { ids: ['aepp-10-5', 'aepp-10-5-1'], title: 'Συναρτήσεις' },
+    { ids: ['aepp-10-5', 'aepp-10-5-2'], title: 'Διαδικασίες' },
+    { ids: ['aepp-10-6'], title: 'Εμβέλεια μεταβλητών και σύνθετες ασκήσεις υποπρογραμμάτων' },
+  ],
   'aepp-supp-1': [
-    ['aepp-supp-1-1', 'aepp-supp-1-1-1'],
-    ['aepp-supp-1-2', 'aepp-supp-1-2-1'],
-    ['aepp-supp-1-3', 'aepp-supp-1-3-1', 'aepp-supp-1-3-2', 'aepp-supp-1-3-3'],
+    { ids: ['aepp-supp-1-1', 'aepp-supp-1-1-1'], title: 'Στοίβα' },
+    { ids: ['aepp-supp-1-2', 'aepp-supp-1-2-1'], title: 'Ουρά' },
+    { ids: ['aepp-supp-1-3', 'aepp-supp-1-3-1', 'aepp-supp-1-3-2', 'aepp-supp-1-3-3'], title: 'Σύνθετες δομές δεδομένων' },
   ],
   'aepp-supp-2': [
-    ['aepp-supp-2-1'],
+    { ids: ['aepp-supp-2-1'], title: 'Μέθοδος Διαίρει και Βασίλευε' },
   ],
   'aepp-supp-3': [
-    ['aepp-supp-3-1', 'aepp-supp-3-1-1', 'aepp-supp-3-1-2'],
+    { ids: ['aepp-supp-3-1', 'aepp-supp-3-1-1', 'aepp-supp-3-1-2'], title: 'ΕΠΙΛΕΞΕ' },
   ],
   'aepp-supp-4': [
-    ['aepp-supp-4-1', 'aepp-supp-4-2', 'aepp-supp-4-2-1', 'aepp-supp-4-2-2'],
-    ['aepp-supp-4-3', 'aepp-supp-4-3-1'],
-    ['aepp-supp-4-4', 'aepp-supp-4-5'],
+    { ids: ['aepp-supp-4-1', 'aepp-supp-4-2', 'aepp-supp-4-2-1', 'aepp-supp-4-2-2'], title: 'Εισαγωγή στον Αντικειμενοστραφή Προγραμματισμό' },
+    { ids: ['aepp-supp-4-3', 'aepp-supp-4-3-1'], title: 'Κλάσεις και Αντικείμενα' },
+    { ids: ['aepp-supp-4-4', 'aepp-supp-4-5'], title: 'Κληρονομικότητα και Πολυμορφισμός' },
   ],
   'aepp-supp-5': [
-    ['aepp-supp-5-1', 'aepp-supp-5-1-1', 'aepp-supp-5-1-2', 'aepp-supp-5-1-3'],
-    ['aepp-supp-5-2', 'aepp-supp-5-2-1', 'aepp-supp-5-2-2'],
-    ['aepp-supp-5-2-3', 'aepp-supp-5-2-4'],
-    ['aepp-supp-5-2-5'],
+    { ids: ['aepp-supp-5-1', 'aepp-supp-5-1-1', 'aepp-supp-5-1-2', 'aepp-supp-5-1-3', 'aepp-supp-13-1'], title: 'Κατηγορίες λαθών' },
+    { ids: ['aepp-supp-5-2', 'aepp-supp-5-2-1', 'aepp-supp-5-2-2'], title: 'Εντοπισμός και διόρθωση λαθών σε επιλογές και επαναλήψεις' },
+    { ids: ['aepp-supp-5-2-3', 'aepp-supp-5-2-4'], title: 'Εκσφαλμάτωση σε πίνακες και υποπρογράμματα' },
+    { ids: ['aepp-supp-5-2-5', 'aepp-supp-13-2'], title: 'Μέθοδος μαύρου κουτιού και ολοκληρωμένος έλεγχος προγράμματος' },
   ],
 };
 
-function buildSectionButtonGroup(sections: Section[]): SectionButtonGroup {
+function buildSectionButtonGroup(sections: Section[], overrides?: { number?: string; title?: string }): SectionButtonGroup {
   const first = sections[0];
   const last = sections[sections.length - 1];
   const number = sections.length === 1 ? first.number : `${first.number} - ${last.number}`;
 
   return {
     id: sections.map((section) => section.id).join('__'),
-    number,
-    title: sections.map((section) => section.title).join(' / '),
+    number: overrides?.number ?? number,
+    title: overrides?.title ?? sections.map((section) => section.title).join(' / '),
     sections,
   };
 }
@@ -195,9 +256,15 @@ function getSingleTopicSectionGroups(subjectId: string, chapter: Chapter): Secti
   const sectionsById = new Map(chapter.sections.map((section) => [section.id, section]));
 
   return configuredGroups
-    .map((sectionIds) => sectionIds.map((sectionId) => sectionsById.get(sectionId)).filter(Boolean) as Section[])
-    .filter((sections) => sections.length > 0)
-    .map(buildSectionButtonGroup);
+    .map((group) => {
+      const sectionIds = Array.isArray(group) ? group : group.ids;
+      const sections = sectionIds.map((sectionId) => sectionsById.get(sectionId)).filter(Boolean) as Section[];
+      const overrides = Array.isArray(group) ? undefined : { number: group.number, title: group.title };
+
+      return { sections, overrides };
+    })
+    .filter(({ sections }) => sections.length > 0)
+    .map(({ sections, overrides }) => buildSectionButtonGroup(sections, overrides));
 }
 
 function getSectionTopicCopy(subjectId: string | undefined, topicKey: string | undefined) {
@@ -393,7 +460,7 @@ export default function SingleTopicsPage() {
                           <div className="module-b-section-list">
                             {sectionGroups.map((sectionGroup, sectionIndex) => (
                               <button
-                                key={sectionGroup.id}
+                                key={`${sectionGroup.id}-${sectionIndex}`}
                                 className="module-b-section-item single-topic-section-item single-topic-branch-item"
                                 style={{ animationDelay: `${sectionIndex * 95}ms` }}
                                 onClick={() => navigate(`/single-topics/${selectedSubject.id}/${sectionGroup.id}`)}
@@ -402,6 +469,7 @@ export default function SingleTopicsPage() {
                                 <span className="single-topic-branch-label">{getGreekOrdinal(sectionIndex)}</span>
                                 <span className="single-topic-branch-line" aria-hidden="true" />
                                 <span className="single-topic-branch-sections">
+                                  <span className="single-topic-branch-group-title">{sectionGroup.title}</span>
                                   {sectionGroup.sections.map((section) => (
                                     <span key={section.id} className="single-topic-branch-section">
                                       <strong>{section.number}</strong>
