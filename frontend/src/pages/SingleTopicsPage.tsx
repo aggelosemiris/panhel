@@ -136,6 +136,31 @@ const AOTH_SINGLE_TOPIC_SECTION_GROUPS: Record<string, string[][]> = {
   ],
 };
 
+const AEPP_SINGLE_TOPIC_SECTION_GROUPS: Record<string, string[][]> = {
+  'aepp-supp-1': [
+    ['aepp-supp-1-1', 'aepp-supp-1-1-1'],
+    ['aepp-supp-1-2', 'aepp-supp-1-2-1'],
+    ['aepp-supp-1-3', 'aepp-supp-1-3-1', 'aepp-supp-1-3-2', 'aepp-supp-1-3-3'],
+  ],
+  'aepp-supp-2': [
+    ['aepp-supp-2-1'],
+  ],
+  'aepp-supp-3': [
+    ['aepp-supp-3-1', 'aepp-supp-3-1-1', 'aepp-supp-3-1-2'],
+  ],
+  'aepp-supp-4': [
+    ['aepp-supp-4-1', 'aepp-supp-4-2', 'aepp-supp-4-2-1', 'aepp-supp-4-2-2'],
+    ['aepp-supp-4-3', 'aepp-supp-4-3-1'],
+    ['aepp-supp-4-4', 'aepp-supp-4-5'],
+  ],
+  'aepp-supp-5': [
+    ['aepp-supp-5-1', 'aepp-supp-5-1-1', 'aepp-supp-5-1-2', 'aepp-supp-5-1-3'],
+    ['aepp-supp-5-2', 'aepp-supp-5-2-1', 'aepp-supp-5-2-2'],
+    ['aepp-supp-5-2-3', 'aepp-supp-5-2-4'],
+    ['aepp-supp-5-2-5'],
+  ],
+};
+
 function buildSectionButtonGroup(sections: Section[]): SectionButtonGroup {
   const first = sections[0];
   const last = sections[sections.length - 1];
@@ -159,7 +184,9 @@ function getSingleTopicSectionGroups(subjectId: string, chapter: Chapter): Secti
       ? MATH_SINGLE_TOPIC_SECTION_GROUPS[chapter.id]
       : subjectId === 'aoth'
         ? AOTH_SINGLE_TOPIC_SECTION_GROUPS[chapter.id]
-        : undefined;
+        : subjectId === 'aepp'
+          ? AEPP_SINGLE_TOPIC_SECTION_GROUPS[chapter.id]
+          : undefined;
 
   if (!configuredGroups) {
     return chapter.sections.map((section) => buildSectionButtonGroup([section]));
