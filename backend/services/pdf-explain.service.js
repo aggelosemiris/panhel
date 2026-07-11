@@ -7,6 +7,7 @@ const FRONTEND_PUBLIC_DIRECTORY = path.join(PROJECT_ROOT, 'frontend', 'public');
 const DEFAULT_MODEL =
   process.env.GEMINI_PDF_EXPLAIN_MODEL || process.env.GEMINI_SPECIALIZED_TEACHER_MODEL || 'gemini-2.5-flash';
 const MAX_PDF_BYTES = 25 * 1024 * 1024;
+const MAX_CONTINUATIONS = 2;
 
 function resolvePublicPdfPath(relativePublicPath) {
   const normalizedPath = String(relativePublicPath || '')
@@ -62,6 +63,7 @@ function buildPdfTeacherPrompt({ question, title, subjectHint }) {
     '4. Αν η ερώτηση είναι αόριστη, κάνε συνοπτική εξήγηση του πιο σημαντικού σημείου του PDF και πρότεινε τι να ρωτήσει μετά.',
     '5. Αν υπάρχει άσκηση, μη δίνεις κατευθείαν τελική λύση. Δώσε καθοδήγηση βήμα-βήμα και μετά ένα μικρό “αν κολλήσεις” hint.',
     '6. Χρησιμοποίησε Markdown, μικρές ενότητες, bullets και όπου χρειάζεται τύπους με $...$.',
+    '7. Μην αφήνεις ποτέ μισή πρόταση, μισό heading ή κομμένη λέξη. Αν χρειάζεται, προτίμησε πιο συμπυκνωμένη αλλά ολοκληρωμένη απάντηση.',
     '',
     `Τίτλος PDF: ${title || 'PDF εφαρμογής'}`,
     subjectHint ? `Μάθημα/ενότητα: ${subjectHint}` : '',
@@ -78,6 +80,24 @@ function buildPdfTeacherPrompt({ question, title, subjectHint }) {
     .join('\n');
 }
 
+function getResponseText(result) {
+  return result?.response?.text?.()?.trim?.() || '';
+}
+
+function getFinishReason(result) {
+  return result?.response?.candidates?.[0]?.finishReason || '';
+}
+
+function looksCutOff(text) {
+  const normalized = String(text || '').trim();
+  if (!normalized) return false;
+  if (normalized.endsWith('...')) return true;
+  if (/\*\*[^*]*$/.test(normalized)) return true;
+  if (/[:;,–-]\s*$/.test(normalized)) return true;
+  const lastLine = normalized.split('\n').filter(Boolean).pop() || '';
+  return lastLine.length > 0 && lastLine.length < 18 && !/[.!;;;)]$/.test(lastLine);
+}
+
 async function explainPdf({ pdfPath, question, title, subjectHint }) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -91,20 +111,43 @@ async function explainPdf({ pdfPath, question, title, subjectHint }) {
     generationConfig: {
       temperature: 0.35,
       topP: 0.9,
-      maxOutputTokens: 2200,
+      maxOutputTokens: 6000,
     },
   });
 
-  const result = await model.generateContent({
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: buildPdfTeacherPrompt({ question, title, subjectHint }) }, pdfInlineData],
-      },
-    ],
-  });
+  const generateWithPrompt = (promptText) =>
+    model.generateContent({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: promptText }, pdfInlineData],
+        },
+      ],
+    });
 
-  const answer = result?.response?.text?.()?.trim?.() || '';
+  let result = await generateWithPrompt(buildPdfTeacherPrompt({ question, title, subjectHint }));
+  let answer = getResponseText(result);
+  let finishReason = getFinishReason(result);
+
+  for (let attempt = 0; attempt < MAX_CONTINUATIONS && (finishReason === 'MAX_TOKENS' || looksCutOff(answer)); attempt += 1) {
+    const continuationPrompt = [
+      'Η προηγούμενη απάντησή σου κόπηκε πριν ολοκληρωθεί.',
+      'Συνέχισε ΜΟΝΟ από το σημείο που σταμάτησες, χωρίς να επαναλάβεις την αρχή.',
+      'Κλείσε την απάντηση με ολοκληρωμένη πρόταση και την ενότητα "**Επόμενο βήμα**".',
+      '',
+      `Προηγούμενη απάντηση που κόπηκε:\n${answer}`,
+      '',
+      `Αρχική ερώτηση μαθητή: ${question || 'Εξήγησέ μου το PDF.'}`,
+    ].join('\n');
+
+    result = await generateWithPrompt(continuationPrompt);
+    const continuation = getResponseText(result);
+    finishReason = getFinishReason(result);
+
+    if (!continuation) break;
+    answer = `${answer}\n\n${continuation}`.trim();
+  }
+
   if (!answer) {
     throw new Error('AI returned empty PDF explanation');
   }
