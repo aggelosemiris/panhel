@@ -7,7 +7,6 @@ const navItems = [
   { href: '/textbook', label: 'Θεωρία', enabled: true },
   { href: '/tests/chapter', label: 'Διαγωνίσματα', enabled: true },
   { href: '/generator', label: 'Generator', enabled: true },
-  { href: '/findoc-ai', label: 'FinDoc AI', enabled: true },
   { href: '/panic-mode', label: 'SOS Θέματα', enabled: true },
   { href: '/single-topics', label: 'Μεμονωμένες Ασκήσεις', enabled: true },
   { href: '/profile', label: 'Στατιστικά', enabled: false },

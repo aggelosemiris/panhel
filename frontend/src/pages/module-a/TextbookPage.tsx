@@ -36,6 +36,10 @@ export default function TextbookPage() {
 
   return (
     <div className="textbook-page">
+      <button className="module-b-back-button" onClick={() => setSelectedSubject(null)} type="button">
+        ← Πίσω στα μαθήματα
+      </button>
+
       <h1>Ενότητα Α: Διαδραστικό Εγχειρίδιο - Θεωρία</h1>
       <p className="subtitle">Μάθημα: {subjectNames[selectedSubject]}</p>
       

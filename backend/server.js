@@ -19,7 +19,6 @@ const generatorRoutes = require('./api/generator.routes');
 const pastExamRoutes = require('./api/past-exam.routes');
 const essayRoutes = require('./api/essay.routes');
 const userRoutes = require('./api/user.routes');
-const findocRoutes = require('./api/findoc.routes');
 const pdfExplainRoutes = require('./api/pdf-explain.routes');
 
 const app = express();
@@ -113,9 +112,6 @@ app.use('/api/exams', pastExamRoutes);
 
 // Module E: Essay AI Sandbox
 app.use('/api/essays', essayRoutes);
-
-// FinDoc AI: grounded invoice and receipt QA
-app.use('/api/findoc', findocRoutes);
 
 // PDF explanation: grounded tutor answers over public in-app PDFs
 app.use('/api/pdf-explain', pdfExplainRoutes);
