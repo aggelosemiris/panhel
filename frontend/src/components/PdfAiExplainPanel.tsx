@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { DEFAULT_QUIZ_USER_ID } from '../context/QuizContext.tsx';
-import { useAuth } from '../context/AuthContext.tsx';
-import { askSpecializedTeacherWithContext } from '../services/specializedTeacher.ts';
+import { explainPdfWithTeacher } from '../services/specializedTeacher.ts';
 
 type PdfAiExplainPanelProps = {
   title: string;
@@ -11,7 +9,6 @@ type PdfAiExplainPanelProps = {
 };
 
 export default function PdfAiExplainPanel({ title, pdfPath, subjectHint }: PdfAiExplainPanelProps) {
-  const { currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [reply, setReply] = useState('');
@@ -29,21 +26,21 @@ export default function PdfAiExplainPanel({ title, pdfPath, subjectHint }: PdfAi
         ? question.trim()
         : `Εξήγησέ μου με απλά λόγια τι πρέπει να προσέξω στο PDF "${title}".`;
 
-      const response = await askSpecializedTeacherWithContext(prompt, {
-        userId: currentUser?.id ?? DEFAULT_QUIZ_USER_ID,
-        mode: 'explain',
-        attachments: [
-          {
-            name: title,
-            sizeLabel: 'PDF μέσα στην εφαρμογή',
-            note: `Ο μαθητής βλέπει το PDF στη διαδρομή ${pdfPath}. ${subjectHint ? `Μάθημα/ενότητα: ${subjectHint}.` : ''} Αν δεν υπάρχει πλήρες κείμενο PDF, δώσε καθοδήγηση με βάση τον τίτλο και ζήτησε από τον μαθητή να γράψει τη σελίδα ή την πρόταση που δεν κατάλαβε.`,
-          },
-        ],
+      const response = await explainPdfWithTeacher({
+        pdfPath,
+        question: prompt,
+        title,
+        subjectHint,
       });
 
-      setReply(response.reply);
-    } catch {
-      setError('Δεν μπόρεσα να πάρω απάντηση τώρα. Δοκίμασε ξανά ή γράψε πιο συγκεκριμένα τη σελίδα/άσκηση.');
+      setReply(response.answer);
+    } catch (requestError) {
+      console.error('[PdfAiExplainPanel] PDF explanation failed:', requestError);
+      setError(
+        requestError instanceof Error
+          ? `Δεν μπόρεσα να διαβάσω το PDF τώρα: ${requestError.message}`
+          : 'Δεν μπόρεσα να διαβάσω το PDF τώρα. Δοκίμασε ξανά ή γράψε πιο συγκεκριμένα τη σελίδα/άσκηση.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +71,7 @@ export default function PdfAiExplainPanel({ title, pdfPath, subjectHint }: PdfAi
           />
 
           <button className="pdf-ai-submit" disabled={isLoading} onClick={handleExplain} type="button">
-            {isLoading ? 'Ο καθηγητής σκέφτεται...' : 'Πάρε εξήγηση'}
+            {isLoading ? 'Σαρώνω το PDF με AI...' : 'Πάρε εξήγηση'}
           </button>
 
           {error ? <div className="pdf-ai-error">{error}</div> : null}

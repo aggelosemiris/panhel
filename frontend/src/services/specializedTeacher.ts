@@ -68,6 +68,13 @@ export type TeacherReplyPayload = {
   profile: StudentProfileStats;
 };
 
+export type PdfExplainPayload = {
+  success: boolean;
+  answer: string;
+  model: string;
+  provider?: string;
+};
+
 export type TeacherStreamHandlers = {
   onDelta: (delta: string) => void;
   onMeta?: (meta: TeacherReplyMeta, profile?: StudentProfileStats) => void;
@@ -251,6 +258,28 @@ export async function askSpecializedTeacherWithContext(
       userId,
       question,
       context,
+    }),
+  });
+}
+
+export async function explainPdfWithTeacher({
+  pdfPath,
+  question,
+  title,
+  subjectHint,
+}: {
+  pdfPath: string;
+  question: string;
+  title: string;
+  subjectHint?: string;
+}) {
+  return requestJson<PdfExplainPayload>('/pdf-explain', {
+    method: 'POST',
+    body: JSON.stringify({
+      pdfPath,
+      question,
+      title,
+      subjectHint,
     }),
   });
 }
