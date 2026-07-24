@@ -13,9 +13,9 @@ const subjectRouteMap = {
 } as const;
 
 const difficultyLabels = {
-  easy: 'Εύκολο',
-  normal: 'Μέτριο',
-  hard: 'Δύσκολο',
+  easy: '1ο διαγώνισμα',
+  normal: '2ο διαγώνισμα',
+  hard: '3ο διαγώνισμα',
 } as const;
 
 type Difficulty = keyof typeof difficultyLabels;
@@ -31,7 +31,7 @@ export default function GeneratorPage() {
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [embeddedPdfUrl, setEmbeddedPdfUrl] = useState<string | null>(null);
   const [isPdfFullscreen, setIsPdfFullscreen] = useState(false);
-  const [pdfPages, setPdfPages] = useState<number>(0);
+  const [pdfPages, setPdfPages] = useState(0);
   const [pdfRenderError, setPdfRenderError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function GeneratorPage() {
         difficulty,
         selectedChapters: selectedChapters.map((chapter) => ({
           id: chapter.id,
-          number: String(chapter.number),
+          number: Number(chapter.number),
           title: chapter.title,
           sections: (chapter.sections ?? []).map((section) =>
             typeof section === 'string' ? section : `${section.number ?? ''} ${section.title ?? ''}`.trim(),
@@ -167,7 +167,7 @@ export default function GeneratorPage() {
           ← Πίσω στα μαθήματα
         </button>
         <h1>Φτιάξε το δικό σου διαγώνισμα</h1>
-        <p>Επίλεξε μάθημα, κεφάλαια και δυσκολία και το σύστημα θα σου ετοιμάσει κανονικό διαγώνισμα σε PDF.</p>
+        <p>Επίλεξε μάθημα, τουλάχιστον δύο κεφάλαια και τύπο διαγωνίσματος. Η γεννήτρια θα ετοιμάσει κανονικό PDF με δομή Πανελληνίων.</p>
       </div>
 
       <div className="generator-layout">
@@ -175,7 +175,7 @@ export default function GeneratorPage() {
           <h2>
             {subject.emoji} {subject.greekName}
           </h2>
-          <p>Επίλεξε τουλάχιστον δύο κεφάλαια. Το παραγόμενο διαγώνισμα θα βασιστεί μόνο σε αυτά.</p>
+          <p>Επίλεξε τουλάχιστον δύο κεφάλαια. Το παραγόμενο διαγώνισμα θα βασιστεί μόνο στην ύλη που διάλεξες.</p>
 
           <div className="generator-chapter-groups">
             {chapterGroups.map((group) => (
@@ -205,7 +205,7 @@ export default function GeneratorPage() {
 
         <aside className="generator-sidebar">
           <h2>Ρυθμίσεις</h2>
-          <p>Διάλεξε το επίπεδο δυσκολίας του τελικού διαγωνίσματος.</p>
+          <p>Διάλεξε ποιο από τα τρία διαγωνίσματα θέλεις να δημιουργηθεί.</p>
 
           <div className="generator-difficulty-grid">
             {(Object.keys(difficultyLabels) as Difficulty[]).map((level) => (
@@ -225,14 +225,14 @@ export default function GeneratorPage() {
 
           <div className="generator-summary">
             <span>Επιλεγμένα κεφάλαια: {selectedChapterIds.length}</span>
-            <span>Δυσκολία: {difficulty ? difficultyLabels[difficulty] : 'Δεν έχει επιλεγεί'}</span>
+            <span>Τύπος: {difficulty ? difficultyLabels[difficulty] : 'Δεν έχει επιλεγεί'}</span>
           </div>
 
           <button className="generator-next-button" disabled={!canContinue || isGeneratingExam} onClick={handleGenerateExam} type="button">
             {isGeneratingExam ? 'Δημιουργία...' : 'Επόμενο'}
           </button>
 
-          {!canContinue ? <p className="generator-warning">Πρέπει να επιλέξεις τουλάχιστον δύο κεφάλαια και μία δυσκολία.</p> : null}
+          {!canContinue ? <p className="generator-warning">Πρέπει να επιλέξεις τουλάχιστον δύο κεφάλαια και έναν τύπο διαγωνίσματος.</p> : null}
         </aside>
       </div>
 
@@ -241,11 +241,11 @@ export default function GeneratorPage() {
           <h2>Έτοιμο διαγώνισμα</h2>
           <div className="generator-ai-card">
             <strong>Μάθημα:</strong> {subject.greekName}
-            <strong>Δυσκολία:</strong> {difficultyLabels[difficulty]}
+            <strong>Τύπος:</strong> {difficultyLabels[difficulty]}
             <strong>Κεφάλαια:</strong> {selectedChapters.map((chapter) => `Κεφ. ${chapter.number}`).join(', ')}
           </div>
 
-          {isGeneratingExam ? <p>Το μοντέλο ετοιμάζει τώρα το κανονικό διαγώνισμά σου σε PDF...</p> : null}
+          {isGeneratingExam ? <p>Η γεννήτρια ετοιμάζει τώρα κανονικό διαγώνισμα σε PDF με δομή ΘΕΜΑ Α-Β-Γ-Δ...</p> : null}
           {generationError ? <p className="exam-correction-error">{generationError}</p> : null}
 
           {generatedExam ? (
@@ -253,7 +253,7 @@ export default function GeneratorPage() {
               <div className="module-b-ai-exam-meta">
                 <strong>{generatedExam.title}</strong>
                 <span>{`Εκτιμώμενος χρόνος: ${generatedExam.estimatedTimeMinutes} λεπτά`}</span>
-                <span>{`Τρόπος δημιουργίας: ${generatedExam.generationMode === 'openai' ? 'AI μοντέλο' : 'Fallback generator'}`}</span>
+                <span>{`Τρόπος δημιουργίας: ${generatedExam.generationMode === 'openai' ? 'AI μοντέλο' : 'Επίσημο πρότυπο γεννήτριας'}`}</span>
                 <span>{`Θέματα: ${generatedExam.questions.length}`}</span>
               </div>
 
@@ -284,7 +284,11 @@ export default function GeneratorPage() {
                     {embeddedPdfUrl && !pdfRenderError ? (
                       <Document
                         file={embeddedPdfUrl}
-                        loading={<div className="generator-pdf-fallback"><strong>Φορτώνω το PDF...</strong></div>}
+                        loading={
+                          <div className="generator-pdf-fallback">
+                            <strong>Φορτώνω το PDF...</strong>
+                          </div>
+                        }
                         onLoadSuccess={({ numPages }) => {
                           setPdfPages(numPages);
                           setPdfRenderError(null);
@@ -296,12 +300,7 @@ export default function GeneratorPage() {
                       >
                         {Array.from({ length: pdfPages }, (_, index) => (
                           <div key={`page-${index + 1}`} className="generator-pdf-page">
-                            <Page
-                              pageNumber={index + 1}
-                              width={isPdfFullscreen ? 1120 : 980}
-                              renderTextLayer={false}
-                              renderAnnotationLayer={false}
-                            />
+                            <Page pageNumber={index + 1} width={isPdfFullscreen ? 1120 : 980} renderTextLayer={false} renderAnnotationLayer={false} />
                           </div>
                         ))}
                       </Document>

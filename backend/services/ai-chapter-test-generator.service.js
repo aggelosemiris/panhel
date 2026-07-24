@@ -2,31 +2,29 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_MODEL = process.env.OPENAI_CHAPTER_TEST_MODEL || 'gpt-5';
 
 const SUBJECT_LABELS = {
+  aoth: 'Αρχές Οικονομικής Θεωρίας (ΑΟΘ)',
+  aepp: 'Ανάπτυξη Εφαρμογών σε Προγραμματιστικό Περιβάλλον (ΑΕΠΠ)',
+  math: 'Μαθηματικά Προσανατολισμού',
+};
+
+const SHORT_SUBJECT_LABELS = {
   aoth: 'ΑΟΘ',
   aepp: 'ΑΕΠΠ',
   math: 'Μαθηματικά',
 };
 
 const DIFFICULTY_LABELS = {
-  easy: 'εύκολο',
-  normal: 'μέτριο',
-  hard: 'δύσκολο',
+  easy: '1ο διαγώνισμα',
+  normal: '2ο διαγώνισμα',
+  hard: '3ο διαγώνισμα',
 };
 
-function buildDifficultyGuidance(difficulty) {
-  if (difficulty === 'easy') {
-    return 'Κράτησε το διαγώνισμα φιλικό, με καθαρή διατύπωση, βασική θεωρία και άμεσες εφαρμογές.';
-  }
-
-  if (difficulty === 'hard') {
-    return 'Κάνε το διαγώνισμα απαιτητικό, με συνδυαστικές ερωτήσεις, αυξημένη κρίση, παγίδες μεθοδολογίας και ύφος προχωρημένης προετοιμασίας.';
-  }
-
-  return 'Κάνε το διαγώνισμα ισορροπημένο, με κανονική δυσκολία και σταδιακή κλιμάκωση.';
+function cleanText(value) {
+  return String(value ?? '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
 }
 
-function formatMathTypography(text) {
-  return String(text || '')
+function normalizeMathNotation(text) {
+  return cleanText(text)
     .replace(/\^2/g, '²')
     .replace(/\^3/g, '³')
     .replace(/\^4/g, '⁴')
@@ -35,150 +33,331 @@ function formatMathTypography(text) {
     .replace(/\bx0\b/g, 'x₀')
     .replace(/\bx1\b/g, 'x₁')
     .replace(/\bx2\b/g, 'x₂')
+    .replace(/\ba0\b/g, 'α₀')
     .replace(/\bf'\(x\)/g, 'f′(x)')
     .replace(/\bg'\(x\)/g, 'g′(x)')
     .replace(/\bh'\(x\)/g, 'h′(x)')
-    .replace(/\bCf\b/g, 'C_f')
-    .replace(/\blim x->/g, 'lim x→')
-    .replace(/\blim\(x->/g, 'lim(x→')
-    .replace(/\blim x→/g, 'lim x→')
-    .replace(/x'x/g, 'x′x')
-    .replace(/y'y/g, 'y′y');
+    .replace(/lim\s*x\s*->\s*/g, 'lim x→')
+    .replace(/->/g, '→')
+    .replace(/<=/g, '≤')
+    .replace(/>=/g, '≥')
+    .replace(/\bCf\b/g, 'C_f');
 }
 
-function normalizeExamTypography(exam, subjectId) {
-  if (subjectId !== 'math') {
-    return exam;
-  }
+function normalizeExam(exam, subjectId) {
+  const normalize = (value) => (subjectId === 'math' ? normalizeMathNotation(value) : cleanText(value));
 
   return {
     ...exam,
-    title: formatMathTypography(exam.title),
-    instructions: (exam.instructions ?? []).map((instruction) => formatMathTypography(instruction)),
-    questions: (exam.questions ?? []).map((question) => ({
-      ...question,
-      title: formatMathTypography(question.title),
-      prompt: formatMathTypography(question.prompt),
+    title: normalize(exam.title),
+    subject: SUBJECT_LABELS[subjectId] ?? exam.subject ?? subjectId,
+    difficultyLabel: DIFFICULTY_LABELS[exam.difficulty] ?? exam.difficultyLabel ?? exam.difficulty,
+    instructions: (exam.instructions ?? []).map(normalize).filter(Boolean),
+    questions: (exam.questions ?? []).map((question, index) => ({
+      id: cleanText(question.id || `ΘΕΜΑ ${['Α', 'Β', 'Γ', 'Δ'][index] ?? index + 1}`),
+      title: normalize(question.title),
+      prompt: normalize(question.prompt),
+      points: Number(question.points || 25),
     })),
   };
 }
 
-function buildFallbackQuestionTemplates({ subjectId, chapterTitle, sections, difficulty }) {
-  const focusList = sections.length ? sections.slice(0, 6).join(', ') : chapterTitle;
+function chapterLine(chapters) {
+  return chapters.map((chapter) => `Κεφάλαιο ${chapter.number}: ${chapter.title}`).join(' | ');
+}
 
-  if (subjectId === 'math') {
-    return [
-      {
-        id: 'Q1',
-        title: 'Θεωρία και βασικές έννοιες',
-        prompt: `Να παρουσιάσετε συνοπτικά τις βασικές έννοιες του ${chapterTitle} και να εξηγήσετε πώς συνδέονται με τις ενότητες: ${focusList}.`,
-        points: 20,
-      },
-      {
-        id: 'Q2',
-        title: 'Εφαρμογή βασικής μεθοδολογίας',
-        prompt: `Να λυθεί άσκηση βασικής εφαρμογής από το ${chapterTitle}, με πλήρη αιτιολόγηση όλων των βημάτων και σωστή χρήση της σχετικής μεθοδολογίας.`,
-        points: 25,
-      },
-      {
-        id: 'Q3',
-        title: 'Συνδυαστική άσκηση',
-        prompt: `Να διατυπωθεί και να λυθεί συνδυαστική άσκηση που αξιοποιεί περισσότερες από μία έννοιες του ${chapterTitle}, με έμφαση στην ορθή πορεία λύσης.`,
-        points: 25,
-      },
-      {
-        id: 'Q4',
-        title: difficulty === 'hard' ? 'Απαιτητικό πρόβλημα κρίσης' : 'Πρόβλημα εμβάθυνσης',
-        prompt: `Να δοθεί πρόβλημα αυξημένης δυσκολίας πάνω στο ${chapterTitle}, το οποίο να απαιτεί ανάλυση, σωστή στρατηγική και τεκμηρίωση του τελικού συμπεράσματος.`,
-        points: 30,
-      },
-    ];
+function sectionLine(chapters) {
+  return chapters
+    .flatMap((chapter) => (chapter.sections ?? []).slice(0, 5).map((section) => cleanText(section.title ?? section)))
+    .filter(Boolean)
+    .slice(0, 10)
+    .join(', ');
+}
+
+function buildDifficultyGuidance(difficulty) {
+  if (difficulty === 'easy') {
+    return 'Το διαγώνισμα έχει βασική κλιμάκωση, καθαρή διατύπωση και ελέγχει πρώτα τη σίγουρη μεθοδολογία.';
   }
 
-  if (subjectId === 'aepp') {
-    return [
-      {
-        id: 'Q1',
-        title: 'Θεωρία / Ορισμοί',
-        prompt: `Να απαντηθούν θεωρητικά ερωτήματα πάνω στο ${chapterTitle}, με βάση τις ενότητες ${focusList}.`,
-        points: 20,
-      },
-      {
-        id: 'Q2',
-        title: 'Σύντομες εφαρμογές',
-        prompt: `Να δοθούν μικρές εφαρμογές ή ερωτήσεις κατανόησης που ελέγχουν αν ο μαθητής μπορεί να εφαρμόσει τις βασικές αρχές του ${chapterTitle}.`,
-        points: 20,
-      },
-      {
-        id: 'Q3',
-        title: 'Ανάπτυξη αλγορίθμου',
-        prompt: `Να ζητηθεί ανάπτυξη αλγορίθμου ή ψευδοκώδικα που αξιοποιεί το περιεχόμενο του ${chapterTitle}, με σαφή βήματα και σωστή λογική.`,
-        points: 30,
-      },
-      {
-        id: 'Q4',
-        title: 'Πρόγραμμα / συνδυαστική άσκηση',
-        prompt: `Να δοθεί πιο αναλυτική άσκηση προγραμματισμού ή ανάλυσης, που να ελέγχει ουσιαστικά την κατανόηση του ${chapterTitle}.`,
-        points: 30,
-      },
-    ];
+  if (difficulty === 'hard') {
+    return 'Το διαγώνισμα έχει αυξημένη δυσκολία, συνδυαστικά ερωτήματα και απαιτεί πλήρη αιτιολόγηση.';
   }
+
+  return 'Το διαγώνισμα έχει κανονική εξεταστική δυσκολία και σταδιακή κλιμάκωση από θεωρία σε σύνθετη εφαρμογή.';
+}
+
+function buildInstructions({ subjectId, chapters, difficulty }) {
+  const subjectInstruction =
+    subjectId === 'math'
+      ? 'Να χρησιμοποιήσετε σχολικό συμβολισμό, πλήρη μαθηματική αιτιολόγηση και καθαρή διάταξη λύσης.'
+      : subjectId === 'aepp'
+        ? 'Να γράψετε τους αλγορίθμους με σχολική λογική ΓΛΩΣΣΑΣ, σαφή μεταβλητές και δομημένα βήματα.'
+        : 'Να χρησιμοποιήσετε ορολογία σχολικού βιβλίου και να ερμηνεύσετε οικονομικά κάθε αριθμητικό αποτέλεσμα.';
+
+  return [
+    `Το διαγώνισμα βασίζεται αποκλειστικά στην ύλη: ${chapterLine(chapters)}.`,
+    buildDifficultyGuidance(difficulty),
+    subjectInstruction,
+    'Όλα τα θέματα βαθμολογούνται με 25 μονάδες. Το σύνολο είναι 100 μονάδες.',
+  ];
+}
+
+function buildMathQuestions(chapters, difficulty) {
+  const refs = chapterLine(chapters);
+  const advanced = difficulty === 'hard';
 
   return [
     {
-      id: 'Q1',
-      title: 'Θεωρία',
-      prompt: `Να αναπτυχθούν οι βασικές έννοιες του ${chapterTitle} με αναφορά στις ενότητες ${focusList}.`,
-      points: 20,
-    },
-    {
-      id: 'Q2',
-      title: 'Σύντομες ερωτήσεις κατανόησης',
-      prompt: `Να απαντηθούν στοχευμένες ερωτήσεις κατανόησης που ελέγχουν αν ο μαθητής έχει αφομοιώσει τον πυρήνα του ${chapterTitle}.`,
-      points: 20,
-    },
-    {
-      id: 'Q3',
-      title: 'Άσκηση εφαρμογής',
-      prompt: `Να δοθεί άσκηση εφαρμογής πάνω στο ${chapterTitle}, με σαφή ζητούμενα και βήμα-βήμα αιτιολόγηση.`,
+      id: 'ΘΕΜΑ Α',
+      title: 'Θεωρία - Ορισμοί - Σωστό/Λάθος',
       points: 25,
+      prompt: `Α1. Να διατυπώσετε έναν βασικό ορισμό ή θεώρημα από την ύλη: ${refs}.
+
+Α2. Να εξηγήσετε με σχολικό συμβολισμό τι σημαίνει όριο συνάρτησης στο x₀ και πότε μια συνάρτηση είναι συνεχής στο x₀.
+
+Α3. Να χαρακτηρίσετε τις παρακάτω προτάσεις ως Σωστές ή Λανθασμένες, αιτιολογώντας σύντομα τις λανθασμένες:
+α) Αν μια συνάρτηση είναι παραγωγίσιμη στο x₀, τότε είναι συνεχής στο x₀.
+β) Αν f′(x)>0 σε διάστημα Δ, τότε η f είναι γνησίως αύξουσα στο Δ.
+γ) Κάθε συνεχής συνάρτηση σε κλειστό διάστημα παίρνει μέγιστη και ελάχιστη τιμή.`,
     },
     {
-      id: 'Q4',
-      title: difficulty === 'hard' ? 'Σύνθετη άσκηση οικονομικής κρίσης' : 'Άσκηση εμβάθυνσης',
-      prompt: `Να δοθεί συνδυαστική άσκηση που απαιτεί κριτική σκέψη και σύνθεση γνώσεων από το ${chapterTitle}.`,
-      points: 35,
+      id: 'ΘΕΜΑ Β',
+      title: 'Καθοδηγούμενη άσκηση με συνάρτηση',
+      points: 25,
+      prompt: `Δίνεται η συνάρτηση f(x)=x³-3x²+2x+1.
+
+Β1. Να βρείτε το πεδίο ορισμού της f.
+Β2. Να υπολογίσετε την f′(x).
+Β3. Να μελετήσετε τη μονοτονία της f και να βρείτε τα τοπικά ακρότατα.
+Β4. Να εξετάσετε αν η εξίσωση f(x)=1 έχει περισσότερες από μία πραγματικές ρίζες.`,
+    },
+    {
+      id: 'ΘΕΜΑ Γ',
+      title: 'Συνδυαστική μελέτη',
+      points: 25,
+      prompt: `Δίνεται συνάρτηση f συνεχής στο ℝ με f′(x)=3x²-12x+9.
+
+Γ1. Να βρείτε τα διαστήματα μονοτονίας της f.
+Γ2. Να προσδιορίσετε τις θέσεις τοπικών ακροτάτων.
+Γ3. Αν f(1)=2, να γράψετε τον τύπο της f.
+Γ4. Να μελετήσετε τη θέση της C_f ως προς την ευθεία y=2, όπου αυτό είναι εφικτό.`,
+    },
+    {
+      id: 'ΘΕΜΑ Δ',
+      title: advanced ? 'Απαιτητικό πρόβλημα Πανελληνίων' : 'Πρόβλημα εμβάθυνσης',
+      points: 25,
+      prompt: advanced
+        ? `Δίνεται η συνάρτηση f(x)=x²·lnx, x>0.
+
+Δ1. Να υπολογίσετε την f′(x) και την f″(x).
+Δ2. Να μελετήσετε τη μονοτονία και τα ακρότατα της f.
+Δ3. Να εξετάσετε την κυρτότητα και τα σημεία καμπής.
+Δ4. Να αποδείξετε ότι η εξίσωση f(x)=1 έχει ακριβώς μία ρίζα στο διάστημα (1, e).
+Δ5. Να τεκμηριώσετε κάθε συμπέρασμα με αναφορά στα κατάλληλα θεωρήματα.`
+        : `Δίνεται η συνάρτηση f(x)=x²-2x+ln(x), x>0.
+
+Δ1. Να βρείτε την f′(x).
+Δ2. Να μελετήσετε τη μονοτονία της f.
+Δ3. Να αποδείξετε ότι η εξίσωση f(x)=0 έχει μοναδική ρίζα σε κατάλληλο διάστημα.
+Δ4. Να εξηγήσετε γιατί η συνέχεια και η μονοτονία είναι κρίσιμες στη λύση.`,
     },
   ];
 }
 
-function buildFallbackGeneratedExam({ subjectId, chapterId, chapterTitle, sections, difficulty }) {
-  const exam = {
-    title: `AI Διαγώνισμα - ${SUBJECT_LABELS[subjectId] ?? subjectId} / ${chapterTitle}`,
-    subject: SUBJECT_LABELS[subjectId] ?? subjectId,
-    chapterId,
-    chapterTitle,
-    difficulty,
-    difficultyLabel: DIFFICULTY_LABELS[difficulty] ?? difficulty,
-    estimatedTimeMinutes: difficulty === 'hard' ? 80 : difficulty === 'easy' ? 50 : 65,
-    instructions: [
-      `Το διαγώνισμα καλύπτει αποκλειστικά το ${chapterTitle}.`,
-      'Δούλεψε με σαφή αιτιολόγηση και πλήρη βήματα λύσης.',
-      buildDifficultyGuidance(difficulty),
-    ],
-    questions: buildFallbackQuestionTemplates({ subjectId, chapterTitle, sections, difficulty }),
-    generationMode: 'fallback',
-    model: 'fallback',
-  };
+function buildAothQuestions(chapters, difficulty) {
+  const refs = chapterLine(chapters);
+  const advanced = difficulty === 'hard';
 
-  return normalizeExamTypography(exam, subjectId);
+  return [
+    {
+      id: 'ΘΕΜΑ Α',
+      title: 'Σωστό/Λάθος και πολλαπλής επιλογής',
+      points: 25,
+      prompt: `Α1. Να χαρακτηρίσετε πέντε προτάσεις ως Σωστές ή Λανθασμένες από την ύλη: ${refs}.
+
+Α2. Να απαντήσετε σε ερωτήσεις πολλαπλής επιλογής που αφορούν βασικούς ορισμούς, διαγράμματα και οικονομικές σχέσεις.
+
+Α3. Για κάθε λανθασμένη πρόταση να δώσετε σύντομη αιτιολόγηση με ορολογία σχολικού βιβλίου.`,
+    },
+    {
+      id: 'ΘΕΜΑ Β',
+      title: 'Αναπτυξιακή θεωρία',
+      points: 25,
+      prompt: `Να αναπτύξετε οργανωμένα ένα θεωρητικό θέμα από την επιλεγμένη ύλη.
+
+Η απάντησή σας πρέπει:
+Β1. να περιλαμβάνει σαφή ορισμό,
+Β2. να παρουσιάζει τα βασικά σημεία με σχολική οικονομική ορολογία,
+Β3. να εξηγεί τη σχέση αιτίας-αποτελέσματος,
+Β4. να καταλήγει σε σύντομο οικονομικό συμπέρασμα.`,
+    },
+    {
+      id: 'ΘΕΜΑ Γ',
+      title: 'Πίνακας δεδομένων και υπολογισμοί',
+      points: 25,
+      prompt: `Δίνεται πίνακας δεδομένων αγοράς ή παραγωγής σχετικός με την ύλη ${refs}.
+
+Γ1. Να υπολογίσετε το ζητούμενο οικονομικό μέγεθος.
+Γ2. Να συμπληρώσετε τα κενά του πίνακα με σωστή μεθοδολογία.
+Γ3. Να ερμηνεύσετε οικονομικά τα αποτελέσματα.
+Γ4. Να αιτιολογήσετε αν η μεταβολή οφείλεται σε μετακίνηση πάνω στην καμπύλη ή σε μετατόπιση της καμπύλης, όπου εφαρμόζεται.`,
+    },
+    {
+      id: 'ΘΕΜΑ Δ',
+      title: advanced ? 'Σύνθετη άσκηση αγοράς' : 'Αριθμητική άσκηση εφαρμογής',
+      points: 25,
+      prompt: advanced
+        ? `Δίνονται οι συναρτήσεις ζήτησης και προσφοράς:
+Qd = 260 - 4P και Qs = 20 + 2P.
+
+Δ1. Να υπολογίσετε την τιμή και την ποσότητα ισορροπίας.
+Δ2. Αν επιβληθεί κατώτατη τιμή P=50, να υπολογίσετε ζητούμενη και προσφερόμενη ποσότητα.
+Δ3. Να εξετάσετε αν δημιουργείται πλεόνασμα ή έλλειμμα και πόσων μονάδων.
+Δ4. Να εξηγήσετε οικονομικά τις συνέπειες της κρατικής παρέμβασης.
+Δ5. Να συνδέσετε το αποτέλεσμα με την ελαστικότητα ή με βασικές αρχές λειτουργίας της αγοράς, όπου είναι εφικτό.`
+        : `Δίνονται οι συναρτήσεις Qd = 120 - 2P και Qs = 30 + 3P.
+
+Δ1. Να βρείτε την τιμή και την ποσότητα ισορροπίας.
+Δ2. Να υπολογίσετε Qd και Qs για P=25.
+Δ3. Να προσδιορίσετε αν υπάρχει πλεόνασμα ή έλλειμμα.
+Δ4. Να ερμηνεύσετε το αποτέλεσμα με σωστή οικονομική ορολογία.`,
+    },
+  ];
 }
 
-async function callOpenAiChapterTestGenerator({ subjectId, chapterId, chapterTitle, sections, difficulty }) {
+function buildAeppQuestions(chapters, difficulty) {
+  const refs = chapterLine(chapters);
+  const advanced = difficulty === 'hard';
+
+  return [
+    {
+      id: 'ΘΕΜΑ Α',
+      title: 'Θεωρία και βασικές έννοιες',
+      points: 25,
+      prompt: `Α1. Να απαντήσετε σε ερωτήσεις θεωρίας από την ύλη: ${refs}.
+
+Α2. Να χαρακτηρίσετε προτάσεις ως Σωστές ή Λανθασμένες και να αιτιολογήσετε σύντομα.
+
+Α3. Να συμπληρώσετε μικρά τμήματα αλγορίθμου ή εντολές ΓΛΩΣΣΑΣ όπου λείπουν βασικά στοιχεία.`,
+    },
+    {
+      id: 'ΘΕΜΑ Β',
+      title: 'Κατανόηση αλγορίθμου',
+      points: 25,
+      prompt: `Δίνεται τμήμα αλγορίθμου σε ΓΛΩΣΣΑ.
+
+Β1. Να δημιουργήσετε πίνακα τιμών για συγκεκριμένες εισόδους.
+Β2. Να εντοπίσετε ποια δομή ελέγχου ή επανάληψης χρησιμοποιείται.
+Β3. Να εξηγήσετε τι εμφανίζει ο αλγόριθμος.
+Β4. Να προτείνετε μία βελτίωση ή διόρθωση αν υπάρχει λογικό σφάλμα.`,
+    },
+    {
+      id: 'ΘΕΜΑ Γ',
+      title: 'Ανάπτυξη προγράμματος σε ΓΛΩΣΣΑ',
+      points: 25,
+      prompt: `Να αναπτύξετε πρόγραμμα σε ΓΛΩΣΣΑ που διαβάζει στοιχεία μαθητών και βαθμούς.
+
+Γ1. Να δηλώσετε κατάλληλες μεταβλητές και πίνακες.
+Γ2. Να ελέγχετε την εγκυρότητα των βαθμών.
+Γ3. Να υπολογίζετε μέσο όρο ανά μαθητή.
+Γ4. Να εμφανίζετε τον μαθητή με τη μεγαλύτερη επίδοση.
+Γ5. Να χρησιμοποιήσετε καθαρή δομή και σχολική σύνταξη.`,
+    },
+    {
+      id: 'ΘΕΜΑ Δ',
+      title: advanced ? 'Σύνθετο πρόγραμμα με πίνακες και υποπρογράμματα' : 'Συνδυαστική άσκηση προγραμματισμού',
+      points: 25,
+      prompt: advanced
+        ? `Να αναπτύξετε πρόγραμμα σε ΓΛΩΣΣΑ που επεξεργάζεται αποτελέσματα διαγωνίσματος.
+
+Δ1. Να διαβάζει ονόματα και βαθμούς Ν μαθητών σε πίνακες.
+Δ2. Να απορρίπτει μη έγκυρες τιμές.
+Δ3. Να χρησιμοποιεί συνάρτηση για τον υπολογισμό μέσου όρου.
+Δ4. Να ταξινομεί τους μαθητές κατά φθίνουσα επίδοση.
+Δ5. Να εμφανίζει τους τρεις πρώτους.
+Δ6. Να αιτιολογήσετε γιατί η λύση σας είναι δομημένη και τμηματική.`
+        : `Να αναπτύξετε πρόγραμμα σε ΓΛΩΣΣΑ που:
+
+Δ1. διαβάζει στοιχεία Ν μαθητών,
+Δ2. υπολογίζει συνολική επίδοση,
+Δ3. αποθηκεύει τα δεδομένα σε πίνακες,
+Δ4. εμφανίζει όσους ξεπέρασαν μια βάση,
+Δ5. αιτιολογεί τη χρήση πίνακα ή επανάληψης όπου χρειάζεται.`,
+    },
+  ];
+}
+
+function buildFallbackCustomTest({ subjectId, chapters, difficulty }) {
+  const normalizedChapters = Array.isArray(chapters) && chapters.length ? chapters : [{ id: 'general', number: '-', title: 'Επιλεγμένη ύλη', sections: [] }];
+  const questions =
+    subjectId === 'math'
+      ? buildMathQuestions(normalizedChapters, difficulty)
+      : subjectId === 'aepp'
+        ? buildAeppQuestions(normalizedChapters, difficulty)
+        : buildAothQuestions(normalizedChapters, difficulty);
+
+  return normalizeExam(
+    {
+      title: `Προσαρμοσμένο Διαγώνισμα Προετοιμασίας - ${SHORT_SUBJECT_LABELS[subjectId] ?? subjectId}`,
+      subject: SUBJECT_LABELS[subjectId] ?? subjectId,
+      chapterIds: normalizedChapters.map((chapter) => chapter.id),
+      difficulty,
+      difficultyLabel: DIFFICULTY_LABELS[difficulty] ?? difficulty,
+      estimatedTimeMinutes: difficulty === 'hard' ? 180 : difficulty === 'easy' ? 120 : 150,
+      instructions: buildInstructions({ subjectId, chapters: normalizedChapters, difficulty }),
+      questions,
+      generationMode: 'fallback',
+      model: 'official-template',
+    },
+    subjectId,
+  );
+}
+
+function buildFallbackGeneratedExam({ subjectId, chapterId, chapterTitle, sections, difficulty }) {
+  return buildFallbackCustomTest({
+    subjectId,
+    chapters: [{ id: chapterId, number: chapterId, title: chapterTitle, sections }],
+    difficulty,
+  });
+}
+
+function buildOpenAiPrompt({ subjectId, chapters, difficulty }) {
+  const subject = SUBJECT_LABELS[subjectId] ?? subjectId;
+  const chaptersText = chapters
+    .map((chapter) => `Κεφάλαιο ${chapter.number}: ${chapter.title}. Ενότητες: ${(chapter.sections ?? []).slice(0, 8).join(', ')}`)
+    .join('\n');
+  const sections = sectionLine(chapters);
+
+  return [
+    'Δημιούργησε ένα πλήρες ελληνικό διαγώνισμα Γ΄ Λυκείου για προετοιμασία Πανελληνίων.',
+    'Απάντησε ΜΟΝΟ με JSON σύμφωνα με το schema.',
+    `Μάθημα: ${subject}`,
+    `Δυσκολία: ${DIFFICULTY_LABELS[difficulty] ?? difficulty}`,
+    `Ύλη:\n${chaptersText}`,
+    sections ? `Εστίαση ενοτήτων: ${sections}` : '',
+    'Η δομή πρέπει να είναι ακριβώς 4 θέματα: ΘΕΜΑ Α, ΘΕΜΑ Β, ΘΕΜΑ Γ, ΘΕΜΑ Δ.',
+    'Κάθε θέμα έχει 25 μονάδες. Σύνολο 100 μονάδες.',
+    'Να γράψεις συγκεκριμένες εκφωνήσεις με αριθμητικά δεδομένα, τύπους, μεταβλητές ή σενάρια. Όχι γενικές οδηγίες μελέτης.',
+    'Η γλώσσα πρέπει να θυμίζει επίσημο σχολικό διαγώνισμα του Υπουργείου Παιδείας.',
+    subjectId === 'math'
+      ? 'Για Μαθηματικά χρησιμοποίησε καθαρό σχολικό συμβολισμό: x², x₀, f′(x), ℝ, lim x→x₀, ∫ όπου χρειάζεται. Απόφυγε ακατέργαστο LaTeX.'
+      : '',
+    subjectId === 'aoth'
+      ? 'Για ΑΟΘ χρησιμοποίησε σχολική οικονομική ορολογία: ζητούμενη ποσότητα, προσφερόμενη ποσότητα, τιμή ισορροπίας, πλεόνασμα, έλλειμμα, ελαστικότητα.'
+      : '',
+    subjectId === 'aepp'
+      ? 'Για ΑΕΠΠ χρησιμοποίησε σχολική ΓΛΩΣΣΑ και όρους όπως ΑΛΓΟΡΙΘΜΟΣ, ΔΕΔΟΜΕΝΑ, ΜΕΤΑΒΛΗΤΕΣ, ΑΡΧΗ, ΤΕΛΟΣ, πίνακες, υποπρογράμματα.'
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+async function callOpenAiCustomGenerator({ subjectId, chapters, difficulty }) {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    return buildFallbackGeneratedExam({ subjectId, chapterId, chapterTitle, sections, difficulty });
+    return buildFallbackCustomTest({ subjectId, chapters, difficulty });
   }
 
   const response = await fetch(OPENAI_API_URL, {
@@ -192,43 +371,25 @@ async function callOpenAiChapterTestGenerator({ subjectId, chapterId, chapterTit
       input: [
         {
           role: 'user',
-          content: [
-            {
-              type: 'input_text',
-              text: [
-                'Create a Greek high-school chapter exam in Greek.',
-                'Return JSON only.',
-                `Subject: ${SUBJECT_LABELS[subjectId] ?? subjectId}`,
-                `Canonical subject id: ${subjectId}`,
-                `Canonical chapter id: ${chapterId}`,
-                `Chapter title: ${chapterTitle}`,
-                `Chapter sections: ${sections.join(', ') || chapterTitle}`,
-                `Difficulty: ${DIFFICULTY_LABELS[difficulty] ?? difficulty}`,
-                'Generate a complete ready-to-use chapter test.',
-                'The test should have 4 questions and total 100 points.',
-                'Keep the exam realistic and suitable for Greek students preparing for Panhellenic-style study.',
-              ].join('\n'),
-            },
-          ],
+          content: [{ type: 'input_text', text: buildOpenAiPrompt({ subjectId, chapters, difficulty }) }],
         },
       ],
       text: {
         format: {
           type: 'json_schema',
-          name: 'chapter_exam',
+          name: 'official_custom_exam',
           strict: true,
           schema: {
             type: 'object',
             additionalProperties: false,
             properties: {
               title: { type: 'string' },
-              instructions: {
-                type: 'array',
-                items: { type: 'string' },
-              },
+              instructions: { type: 'array', items: { type: 'string' } },
               estimatedTimeMinutes: { type: 'number' },
               questions: {
                 type: 'array',
+                minItems: 4,
+                maxItems: 4,
                 items: {
                   type: 'object',
                   additionalProperties: false,
@@ -251,7 +412,7 @@ async function callOpenAiChapterTestGenerator({ subjectId, chapterId, chapterTit
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`OpenAI chapter generator failed (${response.status}): ${errorText}`);
+    throw new Error(`OpenAI custom generator failed (${response.status}): ${errorText}`);
   }
 
   const payload = await response.json();
@@ -265,20 +426,21 @@ async function callOpenAiChapterTestGenerator({ subjectId, chapterId, chapterTit
       .trim();
 
   if (!outputText) {
-    throw new Error('OpenAI chapter generator returned empty output.');
+    throw new Error('OpenAI custom generator returned empty output.');
   }
 
   const parsed = JSON.parse(outputText);
-  return normalizeExamTypography(
+  const normalizedChapters = Array.isArray(chapters) && chapters.length ? chapters : [];
+
+  return normalizeExam(
     {
       title: parsed.title,
       subject: SUBJECT_LABELS[subjectId] ?? subjectId,
-      chapterId,
-      chapterTitle,
+      chapterIds: normalizedChapters.map((chapter) => chapter.id),
       difficulty,
       difficultyLabel: DIFFICULTY_LABELS[difficulty] ?? difficulty,
-      estimatedTimeMinutes: Number(parsed.estimatedTimeMinutes ?? 60),
-      instructions: Array.isArray(parsed.instructions) ? parsed.instructions : [],
+      estimatedTimeMinutes: Number(parsed.estimatedTimeMinutes || (difficulty === 'hard' ? 180 : 150)),
+      instructions: Array.isArray(parsed.instructions) ? parsed.instructions : buildInstructions({ subjectId, chapters: normalizedChapters, difficulty }),
       questions: Array.isArray(parsed.questions) ? parsed.questions : [],
       generationMode: 'openai',
       model: DEFAULT_MODEL,
@@ -287,388 +449,31 @@ async function callOpenAiChapterTestGenerator({ subjectId, chapterId, chapterTit
   );
 }
 
-async function generateChapterTest(args) {
+async function generateCustomTest(args) {
   try {
-    return await callOpenAiChapterTestGenerator(args);
+    return await callOpenAiCustomGenerator(args);
   } catch (error) {
     if (process.env.OPENAI_API_KEY) {
-      console.error('OpenAI chapter test generation failed, using fallback:', error);
+      console.error('OpenAI custom test generation failed, using official fallback template:', error);
+    }
+
+    return buildFallbackCustomTest(args);
+  }
+}
+
+async function generateChapterTest(args) {
+  try {
+    return await callOpenAiCustomGenerator({
+      subjectId: args.subjectId,
+      chapters: [{ id: args.chapterId, number: args.chapterId, title: args.chapterTitle, sections: args.sections ?? [] }],
+      difficulty: args.difficulty,
+    });
+  } catch (error) {
+    if (process.env.OPENAI_API_KEY) {
+      console.error('OpenAI chapter test generation failed, using official fallback template:', error);
     }
 
     return buildFallbackGeneratedExam(args);
-  }
-}
-
-function buildFallbackCustomTest({ subjectId, chapters, difficulty }) {
-  const chapterLine = chapters.map((chapter) => `${chapter.number}. ${chapter.title}`).join(', ');
-  const sectionPool = chapters.flatMap((chapter) => (chapter.sections ?? []).slice(0, 4).map((section) => section.title));
-  const sectionLine = sectionPool.slice(0, 8).join(', ');
-  const chapterRefs = chapters.map((chapter) => `Κεφάλαιο ${chapter.number}`).join(', ');
-  const isHard = difficulty === 'hard';
-  const isEasy = difficulty === 'easy';
-
-  function buildMathQuestions() {
-    return [
-      {
-        id: 'Θέμα Α',
-        title: 'Θεωρία, ορισμοί και σωστό-λάθος',
-        prompt: `Α1. Να αποδείξετε μία βασική πρόταση ή ένα θεώρημα που συνδέεται άμεσα με τα κεφάλαια ${chapterRefs}.
-Α2. Να διατυπώσετε:
-α) έναν ορισμό από την επιλεγμένη ύλη,
-β) ένα θεώρημα ή μία πρόταση που χρησιμοποιείται συχνά στις ασκήσεις,
-γ) τη γεωμετρική ή αναλυτική ερμηνεία του.
-Α3. Να χαρακτηρίσετε τις παρακάτω προτάσεις ως Σωστό ή Λάθος, αιτιολογώντας σύντομα τις λανθασμένες:
-α) Κάθε παραγωγίσιμη συνάρτηση είναι συνεχής στο x₀.
-β) Αν lim x→x₀ f(x)=0 και lim x→x₀ g(x)=0, τότε lim x→x₀ f(x)/g(x)=1.
-γ) Αν f′(x)>0 σε ένα διάστημα, τότε η f είναι γνησίως αύξουσα σε αυτό.`,
-        points: 25,
-      },
-      {
-        id: 'Θέμα Β',
-        title: 'Καθοδηγούμενη άσκηση πάνω σε συνάρτηση',
-        prompt: isEasy
-          ? `Δίνεται η συνάρτηση f(x)=x²-4x+3.
-Β1. Να βρείτε το πεδίο ορισμού της.
-Β2. Να υπολογίσετε την παράγωγο f′(x).
-Β3. Να μελετήσετε τη μονοτονία και να βρείτε τα ακρότατα.
-Β4. Να βρείτε τα σημεία τομής της γραφικής παράστασης με τους άξονες και να σχολιάσετε τη μορφή της C_f.`
-          : `Δίνεται η συνάρτηση f(x)=x³-3x²+2x+1.
-Β1. Να βρείτε το πεδίο ορισμού και να υπολογίσετε την f′(x).
-Β2. Να μελετήσετε τη μονοτονία της f και να βρείτε τα τοπικά ακρότατα.
-Β3. Να μελετήσετε την κυρτότητα της f και να εξετάσετε αν υπάρχουν σημεία καμπής.
-Β4. Να γράψετε την εξίσωση της εφαπτομένης της C_f στο σημείο με τετμημένη x=1.`,
-        points: 25,
-      },
-      {
-        id: 'Θέμα Γ',
-        title: 'Συνδυαστικό πανελλαδικό θέμα',
-        prompt: isHard
-          ? `Δίνεται η συνάρτηση
-f(x)= { x²+αx+β,   x≤1
-      { ln(x)+1,   x>1
-
-Γ1. Να προσδιορίσετε τις τιμές των α, β ώστε η f να είναι συνεχής και παραγωγίσιμη στο x₀=1.
-Γ2. Να εξετάσετε αν η ευθεία y=2x-1 τέμνει τη γραφική παράσταση της f, αξιοποιώντας κατάλληλο θεώρημα.
-Γ3. Να μελετήσετε αν η γραφική παράσταση παρουσιάζει κατακόρυφη ή πλάγια ασύμπτωτη όπου έχει νόημα.
-Γ4. Ένα σημείο Μ κινείται πάνω στην C_f. Να εξετάσετε αν υπάρχει χρονική στιγμή όπου ο ρυθμός μεταβολής της τεταγμένης ισούται με τον ρυθμό μεταβολής της τετμημένης.`
-          : `Δίνεται η συνάρτηση
-f(x)= { x²-1,   x≤1
-      { x+lnx, x>1
-
-Γ1. Να εξετάσετε τη συνέχεια της f στο x₀=1.
-Γ2. Να μελετήσετε την παραγωγισιμότητα της f στο x₀=1.
-Γ3. Να βρείτε, αν υπάρχουν, ασύμπτωτες της γραφικής παράστασης.
-Γ4. Να αποδείξετε ότι η εξίσωση f(x)=2 έχει τουλάχιστον μία λύση.`,
-        points: 25,
-      },
-      {
-        id: 'Θέμα Δ',
-        title: 'Απαιτητικό θέμα στρατηγικής και απόδειξης',
-        prompt: isHard
-          ? `Έστω παραγωγίσιμη συνάρτηση f:(0,+∞)→ℝ και μία παράγουσα F της f στο (0,+∞), για τις οποίες ισχύει
-x·f(x)=2F(x)lnx, για κάθε x>0.
-Δ1. Να αποδείξετε ότι η συνάρτηση g(x)=F(x)/x^(lnx), x>0, είναι σταθερή.
-Δ2. Δίνεται ακόμη ότι η εφαπτομένη της γραφικής παράστασης της f στο σημείο Μ(1,f(1)) είναι παράλληλη στην ευθεία y=2x.
-α) Να υπολογίσετε το lim x→1 f(x)/lnx.
-β) Να αποδείξετε ότι F(1)=1 και F(x)=x^(lnx), για κάθε x>0.
-γ) Να συναγάγετε ρητό τύπο για τη f και να μελετήσετε τη μονοτονία της.
-δ) Να αξιολογήσετε πώς συνδυάζονται όριο, παράγωγος και λογάριθμος στη λύση.`
-          : `Έστω συνεχής συνάρτηση f:[0,2]→ℝ με f′(x)=2x+1 και f(0)=1.
-Δ1. Να βρείτε τον τύπο της f.
-Δ2. Να μελετήσετε τη μονοτονία και την κυρτότητα της f.
-Δ3. Να υπολογίσετε το εμβαδόν του χωρίου που περικλείεται από τη γραφική παράσταση της f, τον άξονα x′x και τις ευθείες x=0, x=1.
-Δ4. Να εξηγήσετε ποια θεωρήματα και ποιες τεχνικές της ύλης χρησιμοποιήσατε σε κάθε βήμα.`,
-        points: 25,
-      },
-    ];
-  }
-
-  function buildAeppQuestions() {
-    return [
-      {
-        id: 'Θέμα Α',
-        title: 'Θεωρία και μικρές εφαρμογές',
-        prompt: `Α1. Να χαρακτηρίσετε ως Σωστό ή Λάθος τις παρακάτω προτάσεις:
-α) Η στοίβα λειτουργεί με λογική FIFO.
-β) Οι πίνακες έχουν σταθερό μέγεθος.
-γ) Η εμβέλεια μίας μεταβλητής καθορίζει πού μπορεί να χρησιμοποιηθεί.
-Α2. Να απαντήσετε σύντομα:
-α) Ποια είναι η διαφορά πίνακα και λίστας;
-β) Τι σημαίνει "ώθηση" σε στοίβα υλοποιημένη με πίνακα;
-Α3. Να συμπληρώσετε μικρό τμήμα αλγορίθμου σε ΓΛΩΣΣΑ σχετικό με την ύλη ${chapterLine}.`,
-        points: 25,
-      },
-      {
-        id: 'Θέμα Β',
-        title: 'Αναπαράσταση και κατανόηση αλγορίθμου',
-        prompt: `Β1. Δίνεται διάγραμμα ροής που επεξεργάζεται δεδομένα από τα κεφάλαια ${chapterLine}. Να το μετατρέψετε σε ψευδογλώσσα.
-Β2. Να συμπληρώσετε τα κενά σε τμήμα αλγορίθμου ώστε να λειτουργεί σωστά.
-Β3. Να εξηγήσετε ποια δομή επιλογής ή επανάληψης είναι η καταλληλότερη και γιατί.
-Β4. Να αναφέρετε ποιο τμήμα του αλγορίθμου είναι κρίσιμο για την ορθότητά του.`,
-        points: 25,
-      },
-      {
-        id: 'Θέμα Γ',
-        title: 'Πλήρες πρόγραμμα σε ΓΛΩΣΣΑ',
-        prompt: isHard
-          ? `Σε σχολικούς αγώνες συμμετέχουν αθλητές. Να γραφεί πρόγραμμα σε ΓΛΩΣΣΑ το οποίο:
-Γ1. Να διαβάζει στοιχεία αθλητών μέχρι να δοθεί ως όνομα η λέξη "ΤΕΛΟΣ".
-Γ2. Να ελέγχει την εγκυρότητα των επιδόσεων.
-Γ3. Να εμφανίζει το πλήθος των έγκυρων συμμετοχών και το ποσοστό επιτυχίας.
-Γ4. Να βρίσκει τις δύο καλύτερες επιδόσεις και τα αντίστοιχα ονόματα.
-Γ5. Να αιτιολογείτε τις επιλογές σας σε μετρητές, αθροιστές και ελέγχους.`
-          : `Να γραφεί πρόγραμμα σε ΓΛΩΣΣΑ το οποίο:
-Γ1. Να διαβάζει στοιχεία μαθητών μέχρι να δοθεί sentinel τιμή.
-Γ2. Να υπολογίζει μέσο όρο επιδόσεων.
-Γ3. Να εμφανίζει το πλήθος όσων ξεπερνούν ένα όριο.
-Γ4. Να βρίσκει τη μέγιστη και τη δεύτερη μέγιστη τιμή με σωστή αιτιολόγηση.`,
-        points: 25,
-      },
-      {
-        id: 'Θέμα Δ',
-        title: 'Σύνθετο προγραμματιστικό θέμα',
-        prompt: isHard
-          ? `Να αναπτύξετε πρόγραμμα σε ΓΛΩΣΣΑ που διαχειρίζεται βαθμολογίες μαθητών:
-Δ1. Να χρησιμοποιεί πίνακα 1Δ για ονόματα και πίνακα 2Δ για βαθμούς μαθημάτων.
-Δ2. Να ελέγχει την εγκυρότητα κάθε βαθμού.
-Δ3. Να υλοποιεί συνάρτηση που υπολογίζει τελικό σταθμισμένο αποτέλεσμα.
-Δ4. Να ταξινομεί τους μαθητές κατά φθίνουσα επίδοση.
-Δ5. Να εμφανίζει τους τρεις κορυφαίους μαθητές με το τελικό τους αποτέλεσμα.
-Δ6. Να σχολιάσετε γιατί η λύση σας θεωρείται δομημένη και τμηματική.`
-          : `Να αναπτύξετε πρόγραμμα σε ΓΛΩΣΣΑ που:
-Δ1. Διαβάζει στοιχεία Ν μαθητών.
-Δ2. Υπολογίζει συνολική επίδοση με βάση δύο κριτήρια.
-Δ3. Αποθηκεύει τα δεδομένα σε πίνακες.
-Δ4. Εμφανίζει τον καλύτερο μαθητή και όσους ξεπέρασαν μία βάση.
-Δ5. Αιτιολογεί τη χρήση υποπρογραμμάτων ή πινάκων όπου χρειάζεται.`,
-        points: 25,
-      },
-    ];
-  }
-
-  function buildAothQuestions() {
-    return [
-      {
-        id: 'Θέμα Α',
-        title: 'Σωστό-λάθος και πολλαπλής επιλογής',
-        prompt: `Α1. Να χαρακτηρίσετε ως Σωστό ή Λάθος πέντε προτάσεις από τα κεφάλαια ${chapterLine}.
-Α2. Να απαντήσετε σε δύο ερωτήσεις πολλαπλής επιλογής πάνω σε ορισμούς, βασικές οικονομικές σχέσεις και έννοιες της ύλης.
-Α3. Σε κάθε λανθασμένη πρόταση να δώσετε σύντομη αιτιολόγηση.`,
-        points: 25,
-      },
-      {
-        id: 'Θέμα Β',
-        title: 'Αναπτυξιακή θεωρία',
-        prompt: `Να αναπτύξετε οργανωμένα ένα θεωρητικό θέμα από τα κεφάλαια ${chapterLine}.
-Η απάντησή σας πρέπει:
-Β1. να περιλαμβάνει σαφή ορισμό,
-Β2. να παρουσιάζει αναλυμένα τα βασικά σημεία,
-Β3. να χρησιμοποιεί σχολική οικονομική ορολογία,
-Β4. να καταλήγει σε σύντομο συμπέρασμα ή αξιολόγηση.
-Έμφαση να δοθεί στις ενότητες: ${sectionLine || chapterLine}.`,
-        points: 25,
-      },
-      {
-        id: 'Θέμα Γ',
-        title: 'Εφαρμογή με πίνακα και υπολογισμούς',
-        prompt: `Δίνεται πίνακας παραγωγικών δυνατοτήτων ή πίνακας δεδομένων αγοράς σχετικός με την ύλη ${chapterLine}.
-Γ1. Να υπολογίσετε το κόστος ευκαιρίας ή το ζητούμενο οικονομικό μέγεθος.
-Γ2. Να ξεχωρίσετε εφικτούς και ανέφικτους συνδυασμούς.
-Γ3. Να υπολογίσετε τη θυσία μονάδων ή τη μεταβολή που προκύπτει από τα δεδομένα.
-Γ4. Να ερμηνεύσετε οικονομικά τα αποτελέσματα, και όχι μόνο αριθμητικά.`,
-        points: 25,
-      },
-      {
-        id: 'Θέμα Δ',
-        title: 'Απαιτητικό αριθμητικό και εννοιολογικό θέμα',
-        prompt: isHard
-          ? `Δίνονται οι συναρτήσεις ζήτησης και προσφοράς:
-Qd = 260 - 4P και Qs = 20 + 2P.
-Δ1. Να υπολογίσετε την τιμή και την ποσότητα ισορροπίας.
-Δ2. Αν το κράτος επιβάλει κατώτατη τιμή P=50, να υπολογίσετε ζητούμενη και προσφερόμενη ποσότητα.
-Δ3. Να εξετάσετε αν δημιουργείται πλεόνασμα ή έλλειμμα και πόσων μονάδων.
-Δ4. Να ερμηνεύσετε οικονομικά την παρέμβαση και να αιτιολογήσετε ποιοι επηρεάζονται περισσότερο.
-Δ5. Να συνδέσετε το αποτέλεσμα με την ελαστικότητα ή με βασικές αρχές λειτουργίας της αγοράς, όπου είναι εφικτό.`
-          : `Δίνονται οι συναρτήσεις ζήτησης και προσφοράς:
-Qd = 120 - 2P και Qs = 30 + 3P.
-Δ1. Να υπολογίσετε την τιμή και την ποσότητα ισορροπίας.
-Δ2. Να εξετάσετε την επίδραση κρατικής παρέμβασης με κατώτατη ή ανώτατη τιμή.
-Δ3. Να ερμηνεύσετε το αποτέλεσμα οικονομικά, χρησιμοποιώντας σωστή ορολογία.`,
-        points: 25,
-      },
-    ];
-  }
-
-  const exam = {
-    title: `Προσαρμοσμένο Διαγώνισμα Προετοιμασίας - ${SUBJECT_LABELS[subjectId] ?? subjectId}`,
-    subject: SUBJECT_LABELS[subjectId] ?? subjectId,
-    chapterIds: chapters.map((chapter) => chapter.id),
-    difficulty,
-    difficultyLabel: DIFFICULTY_LABELS[difficulty] ?? difficulty,
-    estimatedTimeMinutes: subjectId === 'math' ? (isHard ? 180 : 165) : isHard ? 180 : 150,
-    instructions: [
-      `Το διαγώνισμα καλύπτει τα κεφάλαια: ${chapterLine}.`,
-      buildDifficultyGuidance(difficulty),
-      subjectId === 'math'
-        ? 'Απάντησε με πλήρη μαθηματική αιτιολόγηση, σωστό συμβολισμό, αναφορά σε θεωρήματα όπου χρειάζεται και καθαρή διάταξη λύσης.'
-        : subjectId === 'aepp'
-          ? 'Απάντησε με σωστή αλγοριθμική λογική, οργανωμένα βήματα και καθαρή σύνταξη σε ΓΛΩΣΣΑ όπου ζητείται.'
-          : 'Απάντησε με πλήρη ανάπτυξη, σωστή οικονομική ορολογία και σαφή ερμηνεία όλων των αριθμητικών αποτελεσμάτων.',
-    ],
-    questions:
-      subjectId === 'math' ? buildMathQuestions() : subjectId === 'aepp' ? buildAeppQuestions() : buildAothQuestions(),
-    generationMode: 'fallback',
-    model: 'fallback',
-  };
-
-  return normalizeExamTypography(exam, subjectId);
-}
-
-async function generateCustomTest({ subjectId, chapters, difficulty }) {
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    return buildFallbackCustomTest({ subjectId, chapters, difficulty });
-  }
-
-  try {
-    const response = await fetch(OPENAI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: DEFAULT_MODEL,
-        input: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'input_text',
-                text: [
-                  'Create a Greek high-school custom exam in Greek.',
-                  'Return JSON only.',
-                  `Subject: ${SUBJECT_LABELS[subjectId] ?? subjectId}`,
-                  `Difficulty: ${DIFFICULTY_LABELS[difficulty] ?? difficulty}`,
-                  `Chapters: ${chapters
-                    .map((chapter) => `${chapter.number}. ${chapter.title} [${(chapter.sections ?? []).slice(0, 5).join(', ')}]`)
-                    .join(', ')}`,
-                  'Generate a complete ready-to-use custom exam based only on the selected chapters.',
-                  'The exam must feel like an authentic Panhellenic-style written paper for Greek students.',
-                  'Total score must be 100.',
-                  'Do not write generic study advice.',
-                  'Write concrete exam tasks with actual data, formulas, variable values, scenarios, or programming requirements.',
-                  'The result must be a real exam sheet, not a plan.',
-                  'Make the wording feel like an authentic written exam, not like study notes.',
-                  'For hard difficulty, raise the level significantly and include at least one clearly demanding exercise.',
-                  subjectId === 'math'
-                    ? [
-                        'For Mathematics, the structure must be exactly Θέμα Α, Θέμα Β, Θέμα Γ, Θέμα Δ.',
-                        'Θέμα Α: theory, theorem/proposition proof, definitions, and σωστό-λάθος.',
-                        'Θέμα Β: guided exercise around one function or one central idea.',
-                        'Θέμα Γ: combined chapters, continuity/derivative/graph/application style.',
-                        'Θέμα Δ: the most demanding and most Panhellenic-style original problem.',
-                        'Use textbook-like mathematical notation: x² not x^2, x₀ not x0, f′(x), ℝ, clean integral/limit notation.',
-                        'Require proper justification and theorem-based reasoning, not only calculations.',
-                      ].join('\n')
-                    : subjectId === 'aepp'
-                      ? [
-                          'For AEPP, the structure must be exactly Θέμα Α, Θέμα Β, Θέμα Γ, Θέμα Δ.',
-                          'Θέμα Α: theory, σωστό-λάθος, small applications, tiny ΓΛΩΣΣΑ snippets where useful.',
-                          'Θέμα Β: algorithm representation, flowchart to pseudocode, understanding the logic of code.',
-                          'Θέμα Γ: full program in ΓΛΩΣΣΑ with realistic but controlled scenario.',
-                          'Θέμα Δ: heavier programming problem with arrays, validation, functions/procedures, sorting or advanced processing.',
-                          'Do not produce generic advice; produce concrete exam prompts only.',
-                        ].join('\n')
-                      : [
-                          'For AOTH, the structure must be exactly Θέμα Α, Θέμα Β, Θέμα Γ, Θέμα Δ.',
-                          'Θέμα Α: σωστό-λάθος and multiple choice on definitions and basic relations.',
-                          'Θέμα Β: organized developmental theory answer in school style.',
-                          'Θέμα Γ: application with table/data and calculations plus economic interpretation.',
-                          'Θέμα Δ: the most demanding numeric and conceptual market-style exercise with equilibrium/intervention logic.',
-                          'Do not write generic economic commentary; write concrete exam tasks with values and interpretation demands.',
-                        ].join('\n'),
-                ].join('\n'),
-              },
-            ],
-          },
-        ],
-        text: {
-          format: {
-            type: 'json_schema',
-            name: 'custom_exam',
-            strict: true,
-            schema: {
-              type: 'object',
-              additionalProperties: false,
-              properties: {
-                title: { type: 'string' },
-                instructions: { type: 'array', items: { type: 'string' } },
-                estimatedTimeMinutes: { type: 'number' },
-                questions: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    additionalProperties: false,
-                    properties: {
-                      id: { type: 'string' },
-                      title: { type: 'string' },
-                      prompt: { type: 'string' },
-                      points: { type: 'number' },
-                    },
-                    required: ['id', 'title', 'prompt', 'points'],
-                  },
-                },
-              },
-              required: ['title', 'instructions', 'estimatedTimeMinutes', 'questions'],
-            },
-          },
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI custom generator failed (${response.status}): ${errorText}`);
-    }
-
-    const payload = await response.json();
-    const outputText =
-      payload.output_text ||
-      (payload.output ?? [])
-        .flatMap((item) => item.content ?? [])
-        .filter((item) => item.type === 'output_text' && typeof item.text === 'string')
-        .map((item) => item.text)
-        .join('\n')
-        .trim();
-
-    if (!outputText) {
-      throw new Error('OpenAI custom generator returned empty output.');
-    }
-
-    const parsed = JSON.parse(outputText);
-    return normalizeExamTypography(
-      {
-        title: parsed.title,
-        subject: SUBJECT_LABELS[subjectId] ?? subjectId,
-        chapterIds: chapters.map((chapter) => chapter.id),
-        difficulty,
-        difficultyLabel: DIFFICULTY_LABELS[difficulty] ?? difficulty,
-        estimatedTimeMinutes: Number(parsed.estimatedTimeMinutes ?? 75),
-        instructions: Array.isArray(parsed.instructions) ? parsed.instructions : [],
-        questions: Array.isArray(parsed.questions) ? parsed.questions : [],
-        generationMode: 'openai',
-        model: DEFAULT_MODEL,
-      },
-      subjectId,
-    );
-  } catch (error) {
-    if (process.env.OPENAI_API_KEY) {
-      console.error('OpenAI custom test generation failed, using fallback:', error);
-    }
-
-    return buildFallbackCustomTest({ subjectId, chapters, difficulty });
   }
 }
 
